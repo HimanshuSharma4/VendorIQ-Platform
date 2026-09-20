@@ -1,0 +1,33 @@
+<div class="login-container">
+  <mat-card class="login-card" appearance="outlined">
+    <mat-card-header>
+      <mat-card-title>VendorIQ Platform</mat-card-title>
+      <mat-card-subtitle>Please login to your account</mat-card-subtitle>
+    </mat-card-header>
+    
+    <mat-card-content>
+      <!-- (ngSubmit) form ko reload hone se rokk dega -->
+      <form class="login-form">
+        <!-- Email Field -->
+        <mat-form-field appearance="outline" class="full-width">
+          <mat-label>Email Address</mat-label>
+          <!-- [(ngModel)] ki madad se box ko 'email' variable se joda -->
+          <input matInput type="email" name="email" [(ngModel)]="email" placeholder="admin@vendoriq.com">
+        </mat-form-field>
+
+        <!-- Password Field -->
+        <mat-form-field appearance="outline" class="full-width">
+          <mat-label>Password</mat-label>
+          <!-- [(ngModel)] ki madad se box ko 'password' variable se joda -->
+          <input matInput type="password" name="password" [(ngModel)]="password" placeholder="Enter your password">
+        </mat-form-field>
+
+        <!-- Login Button: (click)="onSubmit()" lagaya -->
+        <!-- type="button" lagane se page reload nahi hoga -->
+        <button type="button" mat-flat-button color="primary" class="full-width login-btn" (click)="onSubmit()">
+          Login
+        </button>
+      </form>
+    </mat-card-content>
+  </mat-card>
+</div>

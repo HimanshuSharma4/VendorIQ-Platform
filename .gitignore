@@ -1,0 +1,19 @@
+# Virtual Environment
+venv/
+__pycache__/
+*.pyc
+
+# Sensitive Credentials / Passwords / Keys
+.env
+.env.local
+*.pem
+*.key
+
+# Frontend Build & Dependencies
+node_modules/
+dist/
+.angular/
+
+# Editor Settings
+.vscode/
+.idea/
