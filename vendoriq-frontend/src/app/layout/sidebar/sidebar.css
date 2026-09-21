@@ -1,0 +1,102 @@
+.sidebar {
+  width: 260px;
+  height: 100vh;
+  background-color: #1a1e3b; /* UI mockup wala professional dark blue */
+  color: #a0a5ba;
+  display: flex;
+  flex-direction: column;
+  position: fixed;
+  left: 0;
+  top: 0;
+  box-shadow: 2px 0 5px rgba(0,0,0,0.1);
+  font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+}
+
+.sidebar-brand {
+  display: flex;
+  align-items: center;
+  padding: 24px 20px;
+  border-bottom: 1px solid rgba(255, 255, 255, 0.05);
+}
+
+.logo-icon {
+  background-color: #4a3aff; /* Indigo accent */
+  color: white;
+  width: 35px;
+  height: 35px;
+  border-radius: 8px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-weight: bold;
+  font-size: 18px;
+  margin-right: 12px;
+}
+
+.brand-text h2 {
+  color: #ffffff;
+  font-size: 18px;
+  margin: 0 0 4px 0;
+}
+
+.brand-text p {
+  font-size: 10px;
+  margin: 0;
+  color: #a0a5ba;
+  text-transform: uppercase;
+}
+
+.menu-section {
+  padding: 20px 0;
+  flex-grow: 1;
+  overflow-y: auto;
+}
+
+.section-title {
+  font-size: 11px;
+  font-weight: 600;
+  margin: 0 0 10px 20px;
+  letter-spacing: 1px;
+}
+
+.nav-list {
+  list-style-type: none;
+  padding: 0;
+  margin: 0;
+}
+
+.nav-item a {
+  display: flex;
+  align-items: center;
+  padding: 12px 20px;
+  color: #a0a5ba;
+  text-decoration: none;
+  font-size: 14px;
+  transition: all 0.3s ease;
+  cursor: pointer;
+}
+
+.nav-item a span {
+  margin-right: 15px;
+  font-size: 16px;
+}
+
+.nav-item a:hover {
+  background-color: rgba(255, 255, 255, 0.05);
+  color: #ffffff;
+}
+
+.nav-item.active a {
+  background-color: #4a3aff;
+  color: #ffffff;
+  border-left: 4px solid #ffffff;
+}
+
+.bottom-section {
+  padding: 20px 0;
+  border-top: 1px solid rgba(255, 255, 255, 0.05);
+}
+
+.nav-item.logout a:hover {
+  color: #ff4d4f;
+}

@@ -1,4 +1,6 @@
-from sqlalchemy import Column, Integer, String, Boolean
+from sqlalchemy import Column, Integer, String, Boolean, Float, ForeignKey, DateTime
+from sqlalchemy.orm import relationship
+from datetime import datetime
 from .database import Base
 
 class User(Base):
@@ -18,3 +20,23 @@ class Vendor(Base):
     vendor_name = Column(String, index=True, nullable=False)
     category = Column(String, index=True, nullable=False)
     status = Column(String, default="Active") # Expected values: Active, Inactive, Pending
+    
+    # Ye nayi line add ki hai link banane ke liye
+    purchase_orders = relationship("PurchaseOrder", back_populates="vendor")
+
+
+# ==========================================
+# NAYA PURCHASE ORDER MODEL
+# ==========================================
+class PurchaseOrder(Base):
+    __tablename__ = "purchase_orders"
+
+    id = Column(Integer, primary_key=True, index=True)
+    po_number = Column(String, unique=True, index=True)
+    vendor_id = Column(Integer, ForeignKey("vendors.id")) # Vendor table se link
+    order_date = Column(DateTime, default=datetime.utcnow)
+    total_amount = Column(Float, nullable=False)
+    status = Column(String, default="Pending") # Pending, Approved, Delivered
+
+    # Reverse relationship
+    vendor = relationship("Vendor", back_populates="purchase_orders")

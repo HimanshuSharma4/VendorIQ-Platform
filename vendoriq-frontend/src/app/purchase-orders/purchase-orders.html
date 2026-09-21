@@ -1,0 +1,61 @@
+<div class="dashboard-container" style="padding: 24px;">
+  
+  <!-- Header Section -->
+  <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px;">
+    <div>
+      <h2 style="margin: 0;">Purchase Orders</h2>
+      <p style="margin-top: 5px; color: gray;">Manage procurement and track vendor orders.</p>
+    </div>
+    
+    <button mat-raised-button color="primary" (click)="openAddPODialog()">
+      + Create PO
+    </button>
+  </div>
+
+  <!-- Data Table -->
+  <table mat-table [dataSource]="dataSource" class="mat-elevation-z8" style="width: 100%;">
+    
+    <!-- PO Number Column -->
+    <ng-container matColumnDef="po_number">
+      <th mat-header-cell *matHeaderCellDef> PO Number </th>
+      <td mat-cell *matCellDef="let element"> <strong>{{element.po_number}}</strong> </td>
+    </ng-container>
+
+    <!-- Vendor Name Column (Relationship Magic!) -->
+    <ng-container matColumnDef="vendor_name">
+      <th mat-header-cell *matHeaderCellDef> Vendor </th>
+      <td mat-cell *matCellDef="let element"> {{element.vendor_name}} </td>
+    </ng-container>
+
+    <!-- Date Column -->
+    <ng-container matColumnDef="order_date">
+      <th mat-header-cell *matHeaderCellDef> Date </th>
+      <td mat-cell *matCellDef="let element"> {{element.order_date | date:'mediumDate'}} </td>
+    </ng-container>
+
+    <!-- Amount Column -->
+    <ng-container matColumnDef="total_amount">
+      <th mat-header-cell *matHeaderCellDef> Amount </th>
+      <td mat-cell *matCellDef="let element"> ₹{{element.total_amount}} </td>
+    </ng-container>
+
+    <!-- Status Column -->
+    <ng-container matColumnDef="status">
+      <th mat-header-cell *matHeaderCellDef> Status </th>
+      <td mat-cell *matCellDef="let element"> <strong>{{element.status}}</strong> </td>
+    </ng-container>
+
+    <!-- Actions Column -->
+    <ng-container matColumnDef="actions">
+      <th mat-header-cell *matHeaderCellDef> Actions </th>
+      <td mat-cell *matCellDef="let element">
+        <button mat-button color="warn" (click)="deletePO(element.id)" style="min-width: auto; padding: 0 8px; font-size: 16px;">
+          🗑️
+        </button>
+      </td>
+    </ng-container>
+
+    <tr mat-header-row *matHeaderRowDef="displayedColumns"></tr>
+    <tr mat-row *matRowDef="let row; columns: displayedColumns;"></tr>
+  </table>
+</div>

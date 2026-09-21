@@ -1,13 +1,47 @@
-<!-- Main Application Toolbar -->
-<mat-toolbar color="primary">
-  <span>VendorIQ Management</span>
-  <span class="spacer" style="flex: 1 1 auto;"></span> 
-  <button mat-button (click)="logout()">Logout</button>
-</mat-toolbar>
-
 <!-- Dashboard Content Area -->
 <div class="dashboard-container" style="padding: 24px;">
   
+  <!-- Dashboard Analytics Cards -->
+  <div style="display: flex; gap: 20px; margin-bottom: 30px;">
+    <!-- Card 1 -->
+    <div style="flex: 1; background: white; padding: 20px; border-radius: 8px; box-shadow: 0 2px 4px rgba(0,0,0,0.05); border-left: 5px solid #3f51b5;">
+      <p style="margin: 0; color: #666; font-size: 14px; font-weight: 500;">Total Vendors</p>
+      <h2 style="margin: 10px 0 0; font-size: 28px; color: #333;">{{ analytics.total_vendors }}</h2>
+    </div>
+
+    <!-- Card 2 -->
+    <div style="flex: 1; background: white; padding: 20px; border-radius: 8px; box-shadow: 0 2px 4px rgba(0,0,0,0.05); border-left: 5px solid #4caf50;">
+      <p style="margin: 0; color: #666; font-size: 14px; font-weight: 500;">Active Vendors</p>
+      <h2 style="margin: 10px 0 0; font-size: 28px; color: #333;">{{ analytics.active_vendors }}</h2>
+    </div>
+
+    <!-- Card 3 -->
+    <div style="flex: 1; background: white; padding: 20px; border-radius: 8px; box-shadow: 0 2px 4px rgba(0,0,0,0.05); border-left: 5px solid #ff9800;">
+      <p style="margin: 0; color: #666; font-size: 14px; font-weight: 500;">Total Purchase Orders</p>
+      <h2 style="margin: 10px 0 0; font-size: 28px; color: #333;">{{ analytics.total_purchase_orders }}</h2>
+    </div>
+
+    <!-- Card 4 -->
+    <div style="flex: 1; background: white; padding: 20px; border-radius: 8px; box-shadow: 0 2px 4px rgba(0,0,0,0.05); border-left: 5px solid #f44336;">
+      <p style="margin: 0; color: #666; font-size: 14px; font-weight: 500;">Approved Spend</p>
+      <h2 style="margin: 10px 0 0; font-size: 28px; color: #333;">{{ analytics.total_approved_spend | currency:'INR' }}</h2>
+    </div>
+  </div>
+
+  <!-- NAYA: Dashboard Chart Area -->
+  <div style="background: white; padding: 20px; border-radius: 8px; box-shadow: 0 2px 4px rgba(0,0,0,0.05); margin-bottom: 30px; height: 350px;">
+    <h3 style="margin-top: 0; color: #333;">Metrics Visualization</h3>
+    <div style="height: 280px; display: block;">
+      <canvas baseChart 
+        [datasets]="chartData" 
+        [labels]="chartLabels" 
+        [options]="chartOptions" 
+        [legend]="true" 
+        [type]="chartType">
+      </canvas>
+    </div>
+  </div>
+
   <!-- Header Section with Title and Add Button -->
   <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px;">
     <div>
@@ -48,6 +82,19 @@
       <td mat-cell *matCellDef="let element">
         <!-- Status ko thoda highlight karne ke liye bold kiya hai -->
         <strong>{{element.status}}</strong> 
+      </td>
+    </ng-container>
+
+    <!-- Actions Column -->
+    <ng-container matColumnDef="actions">
+      <th mat-header-cell *matHeaderCellDef> Actions </th>
+      <td mat-cell *matCellDef="let element">
+        <button mat-button color="primary" (click)="editVendor(element)" style="min-width: auto; padding: 0 8px; font-size: 16px;">
+      ✏️
+        </button>
+        <button mat-button color="warn" (click)="deleteVendor(element.vendor_id)" style="min-width: auto; padding: 0 8px; font-size: 16px;">
+      🗑️
+        </button>
       </td>
     </ng-container>
 

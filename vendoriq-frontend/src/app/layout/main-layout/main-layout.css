@@ -1,0 +1,19 @@
+.app-container {
+  display: flex;
+  height: 100vh;
+  overflow: hidden;
+  background-color: #f4f7fe; /* Light grey background jaisa UI me hai */
+}
+
+.main-wrapper {
+  flex: 1;
+  margin-left: 260px; /* Sidebar ki width ke barabar jagah chhodi hai */
+  display: flex;
+  flex-direction: column;
+}
+
+.page-content {
+  padding: 24px;
+  overflow-y: auto;
+  flex: 1;
+}

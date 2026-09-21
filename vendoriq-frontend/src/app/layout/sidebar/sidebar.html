@@ -1,0 +1,51 @@
+<div class="sidebar">
+  <!-- Brand / Logo Area -->
+  <div class="sidebar-brand">
+    <div class="logo-icon">V</div>
+    <div class="brand-text">
+      <h2>VendorIQ</h2>
+      <p>Vendor Reliability Platform</p>
+    </div>
+  </div>
+
+  <!-- Main Menu -->
+  <div class="menu-section">
+    <p class="section-title">MAIN MENU</p>
+    <ul class="nav-list">
+      <!-- routerLink active class add karega jab route match hoga -->
+      <li class="nav-item active">
+        <a routerLink="/dashboard"><span>🏠</span> Dashboard</a>
+      </li>
+      <li class="nav-item">
+        <a routerLink="/users"><span>👥</span> User Management</a>
+      </li>
+      <li class="nav-item">
+        <a routerLink="/vendors"><span>🏢</span> Vendors</a>
+      </li>
+      <li class="nav-item">
+        <a routerLink="/procurement"><span>📦</span> Procurement</a>
+      </li>
+      <li class="nav-item">
+        <a routerLink="/purchase-orders"><span>📄</span> Purchase Orders</a>
+      </li>
+      <li class="nav-item">
+        <a routerLink="/contracts"><span>🤝</span> Contracts & Compliance</a>
+      </li>
+      <li class="nav-item">
+        <a routerLink="/performance"><span>📊</span> Performance & Reliability</a>
+      </li>
+    </ul>
+  </div>
+
+  <!-- Bottom Settings/Logout Area -->
+  <div class="bottom-section">
+    <ul class="nav-list">
+      <li class="nav-item">
+        <a routerLink="/settings"><span>⚙️</span> Settings</a>
+      </li>
+      <li class="nav-item logout">
+        <a (click)="logout()"><span>🚪</span> Logout</a>
+      </li>
+    </ul>
+  </div>
+</div>

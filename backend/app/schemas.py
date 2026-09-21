@@ -1,12 +1,12 @@
 from pydantic import BaseModel, EmailStr
+from datetime import datetime # Ye naya import add kiya hai
 
-# Ye class batati hai ki User register karte waqt kya data bhejega
+# --- User Schemas ---
 class UserCreate(BaseModel):
     email: EmailStr
     password: str
     role: str = "VENDOR"
 
-# Ye class batati hai ki API response me user ko wapas kya dikhega (password hide kar denge)
 class UserResponse(BaseModel):
     id: int
     email: EmailStr
@@ -21,14 +21,11 @@ class Token(BaseModel):
     token_type: str
 
 # --- Vendor Schemas ---
-
-# Frontend se naya vendor banate waqt ye data aayega
 class VendorCreate(BaseModel):
     vendor_name: str
     category: str
     status: str = "Active"
 
-# Backend se API response me (jaise dashboard par) ye data aayega
 class VendorResponse(BaseModel):
     id: int
     vendor_name: str
@@ -36,4 +33,23 @@ class VendorResponse(BaseModel):
     status: str
 
     class Config:
-        from_attributes = True # SQLAlchemy object ko JSON me convert karne ke liye zaroori hai
+        from_attributes = True
+
+# ==========================================
+# --- Purchase Order Schemas (Naya) ---
+# ==========================================
+class PurchaseOrderBase(BaseModel):
+    po_number: str
+    vendor_id: int
+    total_amount: float
+    status: str = "Pending"
+
+class PurchaseOrderCreate(PurchaseOrderBase):
+    pass
+
+class PurchaseOrderResponse(PurchaseOrderBase):
+    id: int
+    order_date: datetime
+
+    class Config:
+        from_attributes = True

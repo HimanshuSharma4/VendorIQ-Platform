@@ -111,3 +111,164 @@ def get_vendors(
         "category": v.category, 
         "status": v.status
     } for v in vendors]
+
+@app.put("/vendors/{vendor_id}")
+def update_vendor(
+    vendor_id: int, 
+    vendor_data: schemas.VendorCreate, 
+    db: Session = Depends(get_db), 
+    current_user: models.User = Depends(auth.get_current_user)
+):
+    """
+    Updates an existing vendor in the database. Secure endpoint.
+    """
+    # 1. Pehle database me vendor ko uski 'id' se dhoondho
+    db_vendor = db.query(models.Vendor).filter(models.Vendor.id == vendor_id).first()
+    
+    if not db_vendor:
+        raise HTTPException(status_code=404, detail="Vendor not found")
+    
+    # 2. Naya data update karo
+    db_vendor.vendor_name = vendor_data.vendor_name
+    db_vendor.category = vendor_data.category
+    db_vendor.status = vendor_data.status
+    
+    # 3. Database me save karo
+    db.commit()
+    db.refresh(db_vendor)
+    
+    # Wapas wahi structure return karo jo frontend table ko chahiye
+    return {
+        "vendor_id": db_vendor.id, 
+        "vendor_name": db_vendor.vendor_name, 
+        "category": db_vendor.category, 
+        "status": db_vendor.status
+    }
+
+@app.delete("/vendors/{vendor_id}")
+def delete_vendor(
+    vendor_id: int, 
+    db: Session = Depends(get_db), 
+    current_user: models.User = Depends(auth.get_current_user)
+):
+    """
+    Deletes a vendor from the database. Secure endpoint.
+    """
+    # 1. Pehle vendor ko dhoondho
+    db_vendor = db.query(models.Vendor).filter(models.Vendor.id == vendor_id).first()
+    
+    if not db_vendor:
+        raise HTTPException(status_code=404, detail="Vendor not found")
+    
+    # 2. Database se delete karo
+    db.delete(db_vendor)
+    db.commit()
+    return {"message": "Vendor deleted successfully"}
+# ==========================================
+# PURCHASE ORDERS APIs (Procurement Module)
+# ==========================================
+
+@app.post("/purchase-orders", response_model=schemas.PurchaseOrderResponse)
+def create_purchase_order(
+    po: schemas.PurchaseOrderCreate, 
+    db: Session = Depends(get_db), 
+    current_user: models.User = Depends(auth.get_current_user)
+):
+    """
+    Creates a new Purchase Order in the database.
+    """
+    # 1. Check karo ki Vendor exist karta hai ya nahi
+    db_vendor = db.query(models.Vendor).filter(models.Vendor.id == po.vendor_id).first()
+    if not db_vendor:
+        raise HTTPException(status_code=404, detail="Vendor not found")
+        
+    # 2. Check karo ki PO Number pehle se toh nahi hai
+    db_po = db.query(models.PurchaseOrder).filter(models.PurchaseOrder.po_number == po.po_number).first()
+    if db_po:
+        raise HTTPException(status_code=400, detail="PO Number already exists")
+
+    new_po = models.PurchaseOrder(
+        po_number=po.po_number,
+        vendor_id=po.vendor_id,
+        total_amount=po.total_amount,
+        status=po.status
+    )
+    db.add(new_po)
+    db.commit()
+    db.refresh(new_po)
+    return new_po
+
+@app.get("/purchase-orders")
+def get_purchase_orders(
+    db: Session = Depends(get_db), 
+    current_user: models.User = Depends(auth.get_current_user)
+):
+    """
+    Retrieves all Purchase Orders from the database.
+    """
+    # Isme hum Vendor ki details bhi sath me bhej rahe hain taaki frontend me vendor ka naam dikh sake
+    pos = db.query(models.PurchaseOrder).all()
+    
+    result = []
+    for po in pos:
+        result.append({
+            "id": po.id,
+            "po_number": po.po_number,
+            "vendor_id": po.vendor_id,
+            "vendor_name": po.vendor.vendor_name if po.vendor else "Unknown", # Relationship ka fayda!
+            "order_date": po.order_date,
+            "total_amount": po.total_amount,
+            "status": po.status
+        })
+    return result
+
+@app.delete("/purchase-orders/{po_id}")
+def delete_purchase_order(
+    po_id: int, 
+    db: Session = Depends(get_db), 
+    current_user: models.User = Depends(auth.get_current_user)
+):
+    """
+    Deletes a Purchase Order.
+    """
+    db_po = db.query(models.PurchaseOrder).filter(models.PurchaseOrder.id == po_id).first()
+    if not db_po:
+        raise HTTPException(status_code=404, detail="Purchase Order not found")
+    
+    db.delete(db_po)
+    db.commit()
+    return {"message": "Purchase Order deleted successfully"}
+
+# ==========================================
+# DASHBOARD ANALYTICS API
+# ==========================================
+from sqlalchemy import func
+
+@app.get("/analytics")
+def get_dashboard_analytics(
+    db: Session = Depends(get_db), 
+    current_user: models.User = Depends(auth.get_current_user)
+):
+    """
+    Calculates real-time metrics for the main dashboard statistics.
+    """
+    # 1. Total Vendors
+    total_vendors = db.query(models.Vendor).count()
+    
+    # 2. Active Vendors
+    active_vendors = db.query(models.Vendor).filter(models.Vendor.status == "Active").count()
+    
+    # 3. Total Purchase Orders
+    total_pos = db.query(models.PurchaseOrder).count()
+    
+    # 4. Total Approved Spend (Amount)
+    approved_spend = db.query(func.sum(models.PurchaseOrder.total_amount))\
+                       .filter(models.PurchaseOrder.status == "Approved")\
+                       .scalar() or 0.0
+
+    return {
+        "total_vendors": total_vendors,
+        "active_vendors": active_vendors,
+        "total_purchase_orders": total_pos,
+        "total_approved_spend": approved_spend
+    }
