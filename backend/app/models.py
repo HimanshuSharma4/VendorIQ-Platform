@@ -40,3 +40,14 @@ class PurchaseOrder(Base):
 
     # Reverse relationship
     vendor = relationship("Vendor", back_populates="purchase_orders")
+
+class Contract(Base):
+    __tablename__ = "contracts"
+    
+    # Correction: 'primary_key' me underscore lagaya hai
+    id = Column(Integer, primary_key=True, index=True) 
+    contract_number = Column(String, unique=True, index=True)
+    vendor_name = Column(String) 
+    start_date = Column(String)
+    end_date = Column(String)
+    compliance_status = Column(String, default="Valid")

@@ -53,3 +53,22 @@ class PurchaseOrderResponse(PurchaseOrderBase):
 
     class Config:
         from_attributes = True
+
+from pydantic import BaseModel
+from typing import Optional
+
+class ContractBase(BaseModel):
+    contract_number: str
+    vendor_name: str
+    start_date: str
+    end_date: str
+    compliance_status: str
+
+class ContractCreate(ContractBase):
+    pass
+
+class ContractResponse(ContractBase):
+    id: int
+
+    class Config:
+        orm_mode = True

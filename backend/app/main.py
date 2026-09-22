@@ -272,3 +272,34 @@ def get_dashboard_analytics(
         "total_purchase_orders": total_pos,
         "total_approved_spend": approved_spend
     }
+# ==========================================
+# CONTRACTS & COMPLIANCE API
+# ==========================================
+@app.get("/contracts", response_model=list[schemas.ContractResponse])
+def get_contracts(db: Session = Depends(get_db), current_user: models.User = Depends(auth.get_current_user)):
+    return db.query(models.Contract).all()
+
+@app.post("/contracts", response_model=schemas.ContractResponse)
+def create_contract(
+    contract: schemas.ContractCreate, 
+    db: Session = Depends(get_db), 
+    current_user: models.User = Depends(auth.get_current_user)
+):
+    new_contract = models.Contract(**contract.dict())
+    db.add(new_contract)
+    db.commit()
+    db.refresh(new_contract)
+    return new_contract
+
+@app.delete("/contracts/{contract_id}")
+def delete_contract(
+    contract_id: int, 
+    db: Session = Depends(get_db), 
+    current_user: models.User = Depends(auth.get_current_user)
+):
+    contract = db.query(models.Contract).filter(models.Contract.id == contract_id).first()
+    if not contract:
+        raise HTTPException(status_code=404, detail="Contract not found")
+    db.delete(contract)
+    db.commit()
+    return {"message": "Contract deleted successfully"}
