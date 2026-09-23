@@ -2,6 +2,8 @@ from fastapi import FastAPI, Depends, HTTPException, status
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.security import OAuth2PasswordRequestForm
 from sqlalchemy.orm import Session
+from sqlalchemy.exc import IntegrityError
+from sqlalchemy import func
 from passlib.context import CryptContext
 
 from . import models, schemas, auth
@@ -164,6 +166,7 @@ def delete_vendor(
     db.delete(db_vendor)
     db.commit()
     return {"message": "Vendor deleted successfully"}
+
 # ==========================================
 # PURCHASE ORDERS APIs (Procurement Module)
 # ==========================================
@@ -242,7 +245,6 @@ def delete_purchase_order(
 # ==========================================
 # DASHBOARD ANALYTICS API
 # ==========================================
-from sqlalchemy import func
 
 @app.get("/analytics")
 def get_dashboard_analytics(
@@ -272,6 +274,7 @@ def get_dashboard_analytics(
         "total_purchase_orders": total_pos,
         "total_approved_spend": approved_spend
     }
+
 # ==========================================
 # CONTRACTS & COMPLIANCE API
 # ==========================================
@@ -303,3 +306,39 @@ def delete_contract(
     db.delete(contract)
     db.commit()
     return {"message": "Contract deleted successfully"}
+
+# ==========================================
+# USER MANAGEMENT API
+# ==========================================
+@app.get("/users")
+def get_all_users(db: Session = Depends(get_db), current_user: models.User = Depends(auth.get_current_user)):
+    users = db.query(models.User).all()
+    return [
+        {
+            "id": u.id, 
+            "username": u.email, 
+            "role": getattr(u, 'role', 'User'), 
+            "is_active": u.is_active
+        } 
+        for u in users
+    ]
+
+@app.post("/users")
+def add_new_user(user_data: dict, db: Session = Depends(get_db)):
+    hashed_pw = pwd_context.hash(user_data["password"])
+    
+    new_user = models.User(
+        email=user_data["username"], 
+        hashed_password=hashed_pw, 
+        role=user_data["role"], 
+        is_active=True
+    )
+    
+    try:
+        db.add(new_user)
+        db.commit()
+        return {"message": "User created successfully"}
+    except IntegrityError:
+        # Agar user pehle se hai, toh database transaction ko rollback karo aur error bhejo
+        db.rollback()
+        raise HTTPException(status_code=400, detail="Username already exists in the system")

@@ -12,27 +12,27 @@
   <div class="menu-section">
     <p class="section-title">MAIN MENU</p>
     <ul class="nav-list">
-      <!-- routerLink active class add karega jab route match hoga -->
-      <li class="nav-item active">
-        <a routerLink="/dashboard"><span>🏠</span> Dashboard</a>
+      <!-- Hardcoded 'active' hata diya hai aur routerLinkActive add kar diya hai -->
+      <li class="nav-item">
+        <a routerLink="/dashboard" routerLinkActive="active"><span>🏠</span> Dashboard</a>
       </li>
       <li class="nav-item">
-        <a routerLink="/users"><span>👥</span> User Management</a>
+        <a routerLink="/user-management" routerLinkActive="active"><span>👥</span> User Management</a>
       </li>
       <li class="nav-item">
-        <a routerLink="/vendors"><span>🏢</span> Vendors</a>
+        <a routerLink="/vendors" routerLinkActive="active"><span>🏢</span> Vendors</a>
       </li>
       <li class="nav-item">
-        <a routerLink="/procurement"><span>📦</span> Procurement</a>
+        <a routerLink="/procurement" routerLinkActive="active"><span>📦</span> Procurement</a>
       </li>
       <li class="nav-item">
-        <a routerLink="/purchase-orders"><span>📄</span> Purchase Orders</a>
+        <a routerLink="/purchase-orders" routerLinkActive="active"><span>📄</span> Purchase Orders</a>
       </li>
       <li class="nav-item">
-        <a routerLink="/contracts"><span>🤝</span> Contracts & Compliance</a>
+        <a routerLink="/contracts" routerLinkActive="active"><span>🤝</span> Contracts & Compliance</a>
       </li>
       <li class="nav-item">
-        <a routerLink="/performance"><span>📊</span> Performance & Reliability</a>
+        <a routerLink="/performance" routerLinkActive="active"><span>📊</span> Performance & Reliability</a>
       </li>
     </ul>
   </div>
@@ -41,10 +41,10 @@
   <div class="bottom-section">
     <ul class="nav-list">
       <li class="nav-item">
-        <a routerLink="/settings"><span>⚙️</span> Settings</a>
+        <a routerLink="/settings" routerLinkActive="active"><span>⚙️</span> Settings</a>
       </li>
       <li class="nav-item logout">
-        <a (click)="logout()"><span>🚪</span> Logout</a>
+        <a (click)="logout()" style="cursor: pointer;"><span>🚪</span> Logout</a>
       </li>
     </ul>
   </div>
