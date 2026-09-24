@@ -35,7 +35,10 @@ import { MatSelectModule } from '@angular/material/select';
           <mat-select [(ngModel)]="requestData.status">
             <mat-option value="Pending">Pending</mat-option>
             <mat-option value="Approved">Approved</mat-option>
-            <mat-option value="In Transit">In Transit</mat-option>
+            <mat-option value="Ordered">Ordered</mat-option>
+            <mat-option value="Delivered">Delivered</mat-option>
+            <mat-option value="Completed">Completed</mat-option>
+            <mat-option value="Cancelled">Cancelled</mat-option>
           </mat-select>
         </mat-form-field>
       </div>
@@ -69,16 +72,16 @@ export class ProcurementDialog {
   standalone: true,
   imports: [CommonModule, MatTableModule, MatButtonModule, HttpClientModule, MatDialogModule],
   templateUrl: './procurement.html',
-  styleUrls: ['./procurement.css'] // (Ensure your css file name matches this)
+  styleUrls: ['./procurement.css']
 })
 export class Procurement implements OnInit {
   displayedColumns: string[] = ['id', 'description', 'vendor_name', 'amount', 'status'];
   dataSource = new MatTableDataSource<any>([]);
 
-  // Live Dashboard Counters
+  // Live Dashboard Counters updated to new statuses
   pendingCount = 0;
   approvedCount = 0;
-  inTransitCount = 0;
+  orderedCount = 0;
 
   constructor(private http: HttpClient, private dialog: MatDialog) {}
 
@@ -97,7 +100,7 @@ export class Procurement implements OnInit {
           // Calculate live status counts
           this.pendingCount = data.filter(d => d.status === 'Pending').length;
           this.approvedCount = data.filter(d => d.status === 'Approved').length;
-          this.inTransitCount = data.filter(d => d.status === 'In Transit').length;
+          this.orderedCount = data.filter(d => d.status === 'Ordered').length;
         },
         error: (err) => console.error('Error fetching procurements:', err)
       });

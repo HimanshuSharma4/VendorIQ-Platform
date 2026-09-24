@@ -5,7 +5,6 @@
       <h2 style="margin: 0;">Procurement Management</h2>
       <p style="margin-top: 5px; color: gray;">Manage procurement workflows, track requests, and monitor assignments.</p>
     </div>
-    <!-- Connected the Click Event -->
     <button mat-raised-button color="primary" (click)="openAddDialog()">+ New Procurement Request</button>
   </div>
 
@@ -20,8 +19,8 @@
       <h2 style="margin: 10px 0 0; font-size: 28px; color: #333;">{{ approvedCount }}</h2>
     </div>
     <div style="flex: 1; background: white; padding: 20px; border-radius: 8px; box-shadow: 0 2px 4px rgba(0,0,0,0.05); border-left: 5px solid #ff9800;">
-      <p style="margin: 0; color: #666; font-size: 14px;">In Transit</p>
-      <h2 style="margin: 10px 0 0; font-size: 28px; color: #333;">{{ inTransitCount }}</h2>
+      <p style="margin: 0; color: #666; font-size: 14px;">Ordered</p>
+      <h2 style="margin: 10px 0 0; font-size: 28px; color: #333;">{{ orderedCount }}</h2>
     </div>
   </div>
   
@@ -52,7 +51,11 @@
       <ng-container matColumnDef="status">
         <th mat-header-cell *matHeaderCellDef> Status </th>
         <td mat-cell *matCellDef="let element" style="font-weight: bold;">
-          <span [ngStyle]="{'color': element.status === 'Approved' ? 'green' : (element.status === 'In Transit' ? 'orange' : '#2196f3')}">
+          <span [ngStyle]="{
+            'color': element.status === 'Completed' || element.status === 'Delivered' ? 'green' : 
+                     (element.status === 'Cancelled' ? 'red' : 
+                     (element.status === 'Approved' || element.status === 'Ordered' ? 'orange' : '#2196f3'))
+          }">
             {{element.status}}
           </span>
         </td>

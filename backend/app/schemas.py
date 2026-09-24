@@ -1,11 +1,30 @@
 from pydantic import BaseModel, EmailStr
-from datetime import datetime # Ye naya import add kiya hai
+from datetime import datetime
+from typing import Optional
+from enum import Enum
+
+# --- Enums (New Alignments with Documentation) ---
+class VendorCategoryEnum(str, Enum):
+    raw_material = "Raw Material"
+    equipment = "Equipment"
+    it = "IT"
+    service = "Service"
+    logistics = "Logistics"
+    maintenance = "Maintenance"
+
+class UserRoleEnum(str, Enum):
+    administrator = "Administrator"
+    procurement_manager = "Procurement Manager"
+    supply_chain_manager = "Supply Chain Manager"
+    vendor = "Vendor"
+    finance_officer = "Finance Officer"
+    auditor = "Auditor"
 
 # --- User Schemas ---
 class UserCreate(BaseModel):
     email: EmailStr
     password: str
-    role: str = "VENDOR"
+    role: str = UserRoleEnum.vendor
 
 class UserResponse(BaseModel):
     id: int
@@ -36,7 +55,7 @@ class VendorResponse(BaseModel):
         from_attributes = True
 
 # ==========================================
-# --- Purchase Order Schemas (Naya) ---
+# --- Purchase Order Schemas ---
 # ==========================================
 class PurchaseOrderBase(BaseModel):
     po_number: str
@@ -54,9 +73,7 @@ class PurchaseOrderResponse(PurchaseOrderBase):
     class Config:
         from_attributes = True
 
-from pydantic import BaseModel
-from typing import Optional
-
+# --- Contract Schemas ---
 class ContractBase(BaseModel):
     contract_number: str
     vendor_name: str
@@ -74,8 +91,6 @@ class ContractResponse(ContractBase):
         orm_mode = True
 
 # --- Procurement Schemas ---
-from pydantic import BaseModel
-
 class ProcurementCreate(BaseModel):
     description: str
     vendor_name: str
@@ -89,9 +104,6 @@ class ProcurementResponse(ProcurementCreate):
         orm_mode = True
 
 # --- Performance Schemas ---
-from pydantic import BaseModel
-from typing import Optional
-
 class PerformanceCreate(BaseModel):
     vendor_name: str
     quality_rating: float

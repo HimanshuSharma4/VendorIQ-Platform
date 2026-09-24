@@ -207,23 +207,26 @@ def get_purchase_orders(
     current_user: models.User = Depends(auth.get_current_user)
 ):
     """
-    Retrieves all Purchase Orders from the database.
+    Retrieves all Purchase Orders from the database aur Vendor ka exact naam join karta hai.
     """
-    # Isme hum Vendor ki details bhi sath me bhej rahe hain taaki frontend me vendor ka naam dikh sake
-    pos = db.query(models.PurchaseOrder).all()
+    # SQLAlchemy Join query to fetch PO and corresponding Vendor name directly
+    results = db.query(models.PurchaseOrder, models.Vendor.vendor_name)\
+                .outerjoin(models.Vendor, models.PurchaseOrder.vendor_id == models.Vendor.id)\
+                .all()
     
-    result = []
-    for po in pos:
-        result.append({
+    formatted_pos = []
+    for po, vendor_name in results:
+        formatted_pos.append({
             "id": po.id,
             "po_number": po.po_number,
             "vendor_id": po.vendor_id,
-            "vendor_name": po.vendor.vendor_name if po.vendor else "Unknown", # Relationship ka fayda!
+            "vendor_name": vendor_name if vendor_name else "Unassigned",
             "order_date": po.order_date,
             "total_amount": po.total_amount,
             "status": po.status
         })
-    return result
+        
+    return formatted_pos
 
 @app.delete("/purchase-orders/{po_id}")
 def delete_purchase_order(
