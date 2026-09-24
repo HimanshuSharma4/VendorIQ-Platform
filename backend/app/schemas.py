@@ -72,3 +72,35 @@ class ContractResponse(ContractBase):
 
     class Config:
         orm_mode = True
+
+# --- Procurement Schemas ---
+from pydantic import BaseModel
+
+class ProcurementCreate(BaseModel):
+    description: str
+    vendor_name: str
+    amount: float
+    status: str = "Pending"
+
+class ProcurementResponse(ProcurementCreate):
+    id: int
+
+    class Config:
+        orm_mode = True
+
+# --- Performance Schemas ---
+from pydantic import BaseModel
+from typing import Optional
+
+class PerformanceCreate(BaseModel):
+    vendor_name: str
+    quality_rating: float
+    delivery_time_days: int
+    reliability_score: float
+    review_notes: Optional[str] = None
+
+class PerformanceResponse(PerformanceCreate):
+    id: int
+
+    class Config:
+        orm_mode = True

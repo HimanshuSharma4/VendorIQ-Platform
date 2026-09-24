@@ -51,3 +51,28 @@ class Contract(Base):
     start_date = Column(String)
     end_date = Column(String)
     compliance_status = Column(String, default="Valid")
+
+# ==========================================
+# NAYA PROCUREMENT MODEL
+# ==========================================
+class ProcurementRequest(Base):
+    __tablename__ = "procurement_requests"
+
+    id = Column(Integer, primary_key=True, index=True)
+    description = Column(String, index=True)
+    vendor_name = Column(String)
+    amount = Column(Float)
+    status = Column(String, default="Pending") # Pending, Approved, In Transit
+
+# ==========================================
+# PERFORMANCE & RELIABILITY MODEL
+# ==========================================
+class VendorPerformance(Base):
+    __tablename__ = "vendor_performance"
+
+    id = Column(Integer, primary_key=True, index=True)
+    vendor_name = Column(String, index=True)
+    quality_rating = Column(Float) # Example: 4.5 out of 5
+    delivery_time_days = Column(Integer) # Average days to deliver
+    reliability_score = Column(Float) # Calculated percentage, e.g., 98.5
+    review_notes = Column(String, nullable=True)

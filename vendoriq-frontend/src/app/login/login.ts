@@ -1,45 +1,51 @@
 import { Component } from '@angular/core';
-import { MatCardModule } from '@angular/material/card';
-import { MatFormFieldModule } from '@angular/material/form-field';
-import { MatInputModule } from '@angular/material/input';
-import { MatButtonModule } from '@angular/material/button';
+import { HttpClient, HttpHeaders, HttpClientModule } from '@angular/common/http';
+import { Router } from '@angular/router';
 import { FormsModule } from '@angular/forms';
-import { AuthService } from '../auth'; 
-import { Router } from '@angular/router'; // Router import kiya
+import { CommonModule } from '@angular/common';
 
 @Component({
   selector: 'app-login',
   standalone: true,
-  imports: [MatCardModule, MatFormFieldModule, MatInputModule, MatButtonModule, FormsModule],
+  imports: [FormsModule, CommonModule, HttpClientModule],
   templateUrl: './login.html',
-  styleUrl: './login.css'
+  styleUrls: ['./login.css']
 })
 export class Login {
   email = '';
   password = '';
+  errorMessage = '';
 
-  // Router ko constructor me add kiya
-  constructor(private authService: AuthService, private router: Router) {}
+  constructor(private http: HttpClient, private router: Router) {}
 
-  onSubmit() {
-    if (this.email && this.password) {
-      this.authService.login(this.email, this.password).subscribe({
-        next: (response: any) => {
-          localStorage.setItem('access_token', response.access_token);
+  onLogin(event: Event) {
+    event.preventDefault(); // Page refresh hone se rokne ke liye
+    this.errorMessage = '';
+
+    // FastAPI ko data 'application/x-www-form-urlencoded' format me chahiye hota hai
+    const body = new URLSearchParams();
+    body.set('username', this.email);
+    body.set('password', this.password);
+
+    const headers = new HttpHeaders({
+      'Content-Type': 'application/x-www-form-urlencoded'
+    });
+
+    this.http.post<any>('http://127.0.0.1:8000/users/login', body.toString(), { headers })
+      .subscribe({
+        next: (res) => {
+          // Token save karein
+          localStorage.setItem('access_token', res.access_token);
           
-          // Naya message
-          alert('Authentication Successful. Redirecting to Dashboard...'); 
-          
-          // Dashboard par bhejne ka code
-          this.router.navigate(['/dashboard']); 
+          // 300ms ka chhota delay taaki token properly save ho jaye uske baad hi page redirect ho
+          setTimeout(() => {
+            window.location.href = '/dashboard';
+          }, 300);
         },
-        error: (error) => {
-          console.error('Authentication Failed', error);
-          alert('Authentication Failed: Invalid credentials or server error. Please try again.');
+        error: (err) => {
+          this.errorMessage = 'Invalid email or password. Please try again.';
+          console.error('Login failed:', err);
         }
       });
-    } else {
-      alert('Validation Error: Please provide both email and password.');
-    }
   }
 }

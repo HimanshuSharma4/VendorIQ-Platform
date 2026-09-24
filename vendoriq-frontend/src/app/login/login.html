@@ -1,33 +1,38 @@
 <div class="login-container">
-  <mat-card class="login-card" appearance="outlined">
-    <mat-card-header>
-      <mat-card-title>VendorIQ Platform</mat-card-title>
-      <mat-card-subtitle>Please login to your account</mat-card-subtitle>
-    </mat-card-header>
-    
-    <mat-card-content>
-      <!-- (ngSubmit) form ko reload hone se rokk dega -->
-      <form class="login-form">
-        <!-- Email Field -->
-        <mat-form-field appearance="outline" class="full-width">
-          <mat-label>Email Address</mat-label>
-          <!-- [(ngModel)] ki madad se box ko 'email' variable se joda -->
-          <input matInput type="email" name="email" [(ngModel)]="email" placeholder="admin@vendoriq.com">
-        </mat-form-field>
+  <!-- Left Side: Branding & Background -->
+  <div class="login-left">
+    <div class="brand-overlay">
+      <div class="logo-circle">V</div>
+      <h1>VendorIQ</h1>
+      <p>Enterprise Vendor Reliability & Procurement Platform</p>
+    </div>
+  </div>
 
-        <!-- Password Field -->
-        <mat-form-field appearance="outline" class="full-width">
-          <mat-label>Password</mat-label>
-          <!-- [(ngModel)] ki madad se box ko 'password' variable se joda -->
-          <input matInput type="password" name="password" [(ngModel)]="password" placeholder="Enter your password">
-        </mat-form-field>
+  <!-- Right Side: Login Form -->
+  <div class="login-right">
+    <div class="login-box">
+      <h2>Welcome Back! 👋</h2>
+      <p class="subtitle">Please sign in to access your dashboard</p>
 
-        <!-- Login Button: (click)="onSubmit()" lagaya -->
-        <!-- type="button" lagane se page reload nahi hoga -->
-        <button type="button" mat-flat-button color="primary" class="full-width login-btn" (click)="onSubmit()">
-          Login
-        </button>
+      <!-- Apna Angular login function yahan connect karein -->
+      <form (submit)="onLogin($event)">
+        <div class="input-group">
+          <label>Email Address</label>
+          <input type="email" name="email" [(ngModel)]="email" placeholder="admin@vendoriq.com" required>
+        </div>
+
+        <div class="input-group">
+          <label>Password</label>
+          <input type="password" name="password" [(ngModel)]="password" placeholder="••••••••" required>
+        </div>
+
+        <!-- Agar login fail hua toh red error message dikhayega -->
+        <p *ngIf="errorMessage" style="color: red; font-size: 13px; margin-bottom: 15px;">{{ errorMessage }}</p>
+
+        <div class="options">
+          <label><input type="checkbox"> Remember me</label>
+          <a href="#">Forgot Password?</a>
+        </div>
+
+        <button type="submit" class="login-btn">Sign In</button>
       </form>
-    </mat-card-content>
-  </mat-card>
-</div>

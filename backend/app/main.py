@@ -342,3 +342,59 @@ def add_new_user(user_data: dict, db: Session = Depends(get_db)):
         # Agar user pehle se hai, toh database transaction ko rollback karo aur error bhejo
         db.rollback()
         raise HTTPException(status_code=400, detail="Username already exists in the system")
+
+# ==========================================
+# PROCUREMENT APIs
+# ==========================================
+@app.post("/procurements", response_model=schemas.ProcurementResponse)
+def create_procurement(
+    req: schemas.ProcurementCreate, 
+    db: Session = Depends(get_db), 
+    current_user: models.User = Depends(auth.get_current_user)
+):
+    """
+    Creates a new procurement request.
+    """
+    new_req = models.ProcurementRequest(**req.dict())
+    db.add(new_req)
+    db.commit()
+    db.refresh(new_req)
+    return new_req
+
+@app.get("/procurements", response_model=list[schemas.ProcurementResponse])
+def get_procurements(
+    db: Session = Depends(get_db), 
+    current_user: models.User = Depends(auth.get_current_user)
+):
+    """
+    Retrieves all procurement requests.
+    """
+    return db.query(models.ProcurementRequest).all()
+
+# ==========================================
+# PERFORMANCE & RELIABILITY APIs
+# ==========================================
+@app.post("/performance", response_model=schemas.PerformanceResponse)
+def add_performance_record(
+    record: schemas.PerformanceCreate, 
+    db: Session = Depends(get_db), 
+    current_user: models.User = Depends(auth.get_current_user)
+):
+    """
+    Adds a new performance record for a vendor.
+    """
+    new_record = models.VendorPerformance(**record.dict())
+    db.add(new_record)
+    db.commit()
+    db.refresh(new_record)
+    return new_record
+
+@app.get("/performance", response_model=list[schemas.PerformanceResponse])
+def get_performance_records(
+    db: Session = Depends(get_db), 
+    current_user: models.User = Depends(auth.get_current_user)
+):
+    """
+    Retrieves all vendor performance records.
+    """
+    return db.query(models.VendorPerformance).all()

@@ -1,1 +1,70 @@
-<p>performance works!</p>
+<div style="padding: 24px;">
+  <!-- Header Area -->
+  <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 30px;">
+    <div>
+      <h2 style="margin: 0;">Performance & Reliability</h2>
+      <p style="margin-top: 5px; color: gray;">Monitor vendor quality ratings, delivery metrics, and overall reliability scores.</p>
+    </div>
+    <button mat-raised-button color="primary" (click)="openAddDialog()">+ Add Record</button>
+  </div>
+
+  <!-- Live Summary Cards -->
+  <div style="display: flex; gap: 20px; margin-bottom: 30px;">
+    <div style="flex: 1; background: white; padding: 20px; border-radius: 8px; box-shadow: 0 2px 4px rgba(0,0,0,0.05); border-left: 5px solid #9c27b0;">
+      <p style="margin: 0; color: #666; font-size: 14px;">Average Quality Rating</p>
+      <h2 style="margin: 10px 0 0; font-size: 28px; color: #333;">{{ avgQuality }} <span style="font-size: 16px; color: gray;">/ 5</span></h2>
+    </div>
+    <div style="flex: 1; background: white; padding: 20px; border-radius: 8px; box-shadow: 0 2px 4px rgba(0,0,0,0.05); border-left: 5px solid #e91e63;">
+      <p style="margin: 0; color: #666; font-size: 14px;">Average Reliability</p>
+      <h2 style="margin: 10px 0 0; font-size: 28px; color: #333;">{{ avgReliability }}%</h2>
+    </div>
+    <div style="flex: 1; background: white; padding: 20px; border-radius: 8px; box-shadow: 0 2px 4px rgba(0,0,0,0.05); border-left: 5px solid #00bcd4;">
+      <p style="margin: 0; color: #666; font-size: 14px;">Total Records Tracked</p>
+      <h2 style="margin: 10px 0 0; font-size: 28px; color: #333;">{{ totalRecords }}</h2>
+    </div>
+  </div>
+  
+  <!-- Performance Table -->
+  <div style="background: white; border-radius: 8px; box-shadow: 0 2px 4px rgba(0,0,0,0.05); overflow: hidden;">
+    <table mat-table [dataSource]="dataSource" style="width: 100%;">
+       
+      <ng-container matColumnDef="id">
+        <th mat-header-cell *matHeaderCellDef> ID </th>
+        <td mat-cell *matCellDef="let element"> #{{element.id}} </td>
+      </ng-container>
+
+      <ng-container matColumnDef="vendor_name">
+        <th mat-header-cell *matHeaderCellDef> Vendor Name </th>
+        <td mat-cell *matCellDef="let element" style="font-weight: 500;"> {{element.vendor_name}} </td>
+      </ng-container>
+
+      <ng-container matColumnDef="quality_rating">
+        <th mat-header-cell *matHeaderCellDef> Quality Rating </th>
+        <td mat-cell *matCellDef="let element"> ⭐ {{element.quality_rating}} </td>
+      </ng-container>
+
+      <ng-container matColumnDef="delivery_time_days">
+        <th mat-header-cell *matHeaderCellDef> Delivery Time </th>
+        <td mat-cell *matCellDef="let element"> {{element.delivery_time_days}} Days </td>
+      </ng-container>
+
+      <ng-container matColumnDef="reliability_score">
+        <th mat-header-cell *matHeaderCellDef> Reliability </th>
+        <td mat-cell *matCellDef="let element" style="font-weight: bold;">
+          <!-- Reliability score ke hisab se dynamic color change -->
+          <span [ngStyle]="{'color': element.reliability_score >= 90 ? 'green' : (element.reliability_score >= 75 ? 'orange' : 'red')}">
+            {{element.reliability_score}}%
+          </span>
+        </td>
+      </ng-container>
+
+      <ng-container matColumnDef="review_notes">
+        <th mat-header-cell *matHeaderCellDef> Notes </th>
+        <td mat-cell *matCellDef="let element" style="color: gray;"> {{element.review_notes || 'N/A'}} </td>
+      </ng-container>
+
+      <tr mat-header-row *matHeaderRowDef="displayedColumns"></tr>
+      <tr mat-row *matRowDef="let row; columns: displayedColumns;"></tr>
+    </table>
+  </div>
+</div>
