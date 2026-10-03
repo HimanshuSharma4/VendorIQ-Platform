@@ -1,3 +1,4 @@
+import { Products } from './products/products';
 import { Routes } from '@angular/router';
 import { MainLayout } from './layout/main-layout/main-layout';
 import { Dashboard } from './dashboard/dashboard'; 
@@ -6,9 +7,8 @@ import { PurchaseOrders } from './purchase-orders/purchase-orders';
 import { Contracts } from './contracts/contracts'; 
 import { UserManagement } from './user-management/user-management'; 
 import { VendorsComponent } from './vendors/vendors'; 
-// Ye rahe aapke dono naye imports
 import { Procurement } from './procurement/procurement'; 
-import { Performance } from './performance/performance';
+import { VendorAnalytics } from './vendor-analytics/vendor-analytics'; 
 
 export const routes: Routes = [
   { path: 'login', component: Login },
@@ -22,9 +22,12 @@ export const routes: Routes = [
       { path: 'contracts', component: Contracts }, 
       { path: 'user-management', component: UserManagement }, 
       { path: 'vendors', component: VendorsComponent }, 
-      // Dono alag-alag pages ke routes
+      
+      // NAYA ROUTE YAHAN ADD KIYA HAI
+      { path: 'products', component: Products }, 
+      
       { path: 'procurement', component: Procurement }, 
-      { path: 'performance', component: Performance}, 
+      { path: 'performance', component: VendorAnalytics }, 
     ]
   }
 ];

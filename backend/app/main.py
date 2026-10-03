@@ -1,403 +1,185 @@
 from fastapi import FastAPI, Depends, HTTPException, status
+from sqlalchemy.orm import Session
+from sqlalchemy import func
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.security import OAuth2PasswordRequestForm
-from sqlalchemy.orm import Session
-from sqlalchemy.exc import IntegrityError
-from sqlalchemy import func
-from passlib.context import CryptContext
+from pydantic import BaseModel
+from typing import List
 
-from . import models, schemas, auth
+from . import models, schemas
 from .database import engine, get_db
 
-# Password hashing configuration
-pwd_context = CryptContext(schemes=["bcrypt"], deprecated="auto")
-
-# Database tables create karna
 models.Base.metadata.create_all(bind=engine)
 
-# FastAPI app initialize karna
-app = FastAPI(title="VendorIQ API")
+app = FastAPI(title="VendorIQ Reliability Intelligence Platform")
 
-# --- CORS Middleware Configuration ---
 app.add_middleware(
     CORSMiddleware,
-    allow_origins=["http://localhost:4200"], # Angular frontend allowed
+    allow_origins=["*"],
     allow_credentials=True,
     allow_methods=["*"],
     allow_headers=["*"],
 )
-# -------------------------------------
 
-def get_password_hash(password):
-    return pwd_context.hash(password)
+class LoginRequest(BaseModel):
+    email: str
+    password: str
 
-def verify_password(plain_password, hashed_password):
-    return pwd_context.verify(plain_password, hashed_password)
-
-@app.get("/")
-def read_root():
-    return {"message": "VendorIQ Platform API is running!"}
-
+# ==========================================
+# 1. USERS API & AUTH
+# ==========================================
 @app.post("/users/register", response_model=schemas.UserResponse)
 def register_user(user: schemas.UserCreate, db: Session = Depends(get_db)):
-    # Check agar email pehle se exist karti hai
-    db_user = db.query(models.User).filter(models.User.email == user.email).first()
-    if db_user:
-        raise HTTPException(status_code=400, detail="Email already registered")
-    
-    # Password hash karke database me save karna
-    hashed_password = get_password_hash(user.password)
-    new_user = models.User(email=user.email, hashed_password=hashed_password, role=user.role)
-    db.add(new_user)
+    db_user = models.User(**user.model_dump())
+    db.add(db_user)
     db.commit()
-    db.refresh(new_user)
-    return new_user
+    db.refresh(db_user)
+    return db_user
 
-@app.post("/users/login", response_model=schemas.Token)
-def login_user(form_data: OAuth2PasswordRequestForm = Depends(), db: Session = Depends(get_db)):
-    # Check karein ki user database me hai ya nahi
-    db_user = db.query(models.User).filter(models.User.email == form_data.username).first()
-    
-    # Agar user nahi mila ya password match nahi hua
-    if not db_user or not verify_password(form_data.password, db_user.hashed_password):
-        raise HTTPException(
-            status_code=status.HTTP_401_UNAUTHORIZED,
-            detail="Invalid email or password"
-        )
-    
-    # JWT Token generate karna
-    token_data = {"sub": db_user.email, "role": db_user.role}
-    access_token = auth.create_access_token(data=token_data)
-    
-    return {"access_token": access_token, "token_type": "bearer"}
+@app.post("/users/login")
+def login_json(req: LoginRequest, db: Session = Depends(get_db)):
+    user = db.query(models.User).filter(models.User.email == req.email).first()
+    if not user or user.password != req.password:
+        raise HTTPException(status_code=401, detail="Invalid credentials")
+    return {"access_token": user.email, "token_type": "bearer"}
 
-@app.get("/users/me", response_model=schemas.UserResponse)
-def read_users_me(current_user: models.User = Depends(auth.get_current_user)):
-    return current_user
+@app.post("/token")
+def login_form(form_data: OAuth2PasswordRequestForm = Depends(), db: Session = Depends(get_db)):
+    user = db.query(models.User).filter(models.User.email == form_data.username).first()
+    if not user or user.password != form_data.password:
+        raise HTTPException(status_code=401, detail="Invalid credentials")
+    return {"access_token": user.email, "token_type": "bearer"}
 
-# --- Secure Vendor APIs (Database Connected) ---
+# ==========================================
+# 2. VENDORS API (Create, Read, Update, Delete)
+# ==========================================
+@app.get("/vendors", response_model=List[schemas.VendorResponse])
+def get_vendors(db: Session = Depends(get_db)):
+    return db.query(models.Vendor).all()
 
 @app.post("/vendors", response_model=schemas.VendorResponse)
-def create_vendor(
-    vendor: schemas.VendorCreate, 
-    db: Session = Depends(get_db), 
-    current_user: models.User = Depends(auth.get_current_user)
-):
-    """
-    Creates a new vendor in the database. Secure endpoint.
-    """
-    new_vendor = models.Vendor(
-        vendor_name=vendor.vendor_name,
-        category=vendor.category,
-        status=vendor.status
-    )
-    db.add(new_vendor)
-    db.commit()
-    db.refresh(new_vendor)
-    return new_vendor
-
-@app.get("/vendors")
-def get_vendors(
-    db: Session = Depends(get_db), 
-    current_user: models.User = Depends(auth.get_current_user)
-):
-    """
-    Retrieves all vendors from the database. Secure endpoint.
-    """
-    vendors = db.query(models.Vendor).all()
-    
-    # Frontend table me column ka naam 'vendor_id' hai, isliye hum DB ke 'id' ko map kar rahe hain
-    return [{
-        "vendor_id": v.id, 
-        "vendor_name": v.vendor_name, 
-        "category": v.category, 
-        "status": v.status
-    } for v in vendors]
-
-@app.put("/vendors/{vendor_id}")
-def update_vendor(
-    vendor_id: int, 
-    vendor_data: schemas.VendorCreate, 
-    db: Session = Depends(get_db), 
-    current_user: models.User = Depends(auth.get_current_user)
-):
-    """
-    Updates an existing vendor in the database. Secure endpoint.
-    """
-    # 1. Pehle database me vendor ko uski 'id' se dhoondho
-    db_vendor = db.query(models.Vendor).filter(models.Vendor.id == vendor_id).first()
-    
-    if not db_vendor:
-        raise HTTPException(status_code=404, detail="Vendor not found")
-    
-    # 2. Naya data update karo
-    db_vendor.vendor_name = vendor_data.vendor_name
-    db_vendor.category = vendor_data.category
-    db_vendor.status = vendor_data.status
-    
-    # 3. Database me save karo
+def create_vendor(vendor: schemas.VendorCreate, db: Session = Depends(get_db)):
+    db_vendor = models.Vendor(**vendor.model_dump())
+    db.add(db_vendor)
     db.commit()
     db.refresh(db_vendor)
-    
-    # Wapas wahi structure return karo jo frontend table ko chahiye
-    return {
-        "vendor_id": db_vendor.id, 
-        "vendor_name": db_vendor.vendor_name, 
-        "category": db_vendor.category, 
-        "status": db_vendor.status
-    }
+    return db_vendor
 
-@app.delete("/vendors/{vendor_id}")
-def delete_vendor(
-    vendor_id: int, 
-    db: Session = Depends(get_db), 
-    current_user: models.User = Depends(auth.get_current_user)
-):
-    """
-    Deletes a vendor from the database. Secure endpoint.
-    """
-    # 1. Pehle vendor ko dhoondho
-    db_vendor = db.query(models.Vendor).filter(models.Vendor.id == vendor_id).first()
-    
+@app.put("/vendors/{vendor_id}", response_model=schemas.VendorResponse)
+def update_vendor(vendor_id: int, vendor_data: schemas.VendorCreate, db: Session = Depends(get_db)):
+    db_vendor = db.query(models.Vendor).filter(models.Vendor.vendor_id == vendor_id).first()
     if not db_vendor:
         raise HTTPException(status_code=404, detail="Vendor not found")
     
-    # 2. Database se delete karo
+    for key, value in vendor_data.model_dump(exclude_unset=True).items():
+        setattr(db_vendor, key, value)
+        
+    db.commit()
+    db.refresh(db_vendor)
+    return db_vendor
+
+@app.delete("/vendors/{vendor_id}")
+def delete_vendor(vendor_id: int, db: Session = Depends(get_db)):
+    db_vendor = db.query(models.Vendor).filter(models.Vendor.vendor_id == vendor_id).first()
+    if not db_vendor:
+        raise HTTPException(status_code=404, detail="Vendor not found")
     db.delete(db_vendor)
     db.commit()
     return {"message": "Vendor deleted successfully"}
 
 # ==========================================
-# PURCHASE ORDERS APIs (Procurement Module)
+# 3. PRODUCTS API
 # ==========================================
+@app.get("/products", response_model=List[schemas.ProductResponse])
+def get_products(db: Session = Depends(get_db)):
+    return db.query(models.Product).all()
+
+@app.post("/products", response_model=schemas.ProductResponse)
+def create_product(product: schemas.ProductCreate, db: Session = Depends(get_db)):
+    db_product = models.Product(**product.model_dump())
+    db.add(db_product)
+    db.commit()
+    db.refresh(db_product)
+    return db_product
+
+@app.put("/products/{product_id}", response_model=schemas.ProductResponse)
+def update_product(product_id: int, product_data: schemas.ProductCreate, db: Session = Depends(get_db)):
+    db_product = db.query(models.Product).filter(models.Product.product_id == product_id).first()
+    if not db_product:
+        raise HTTPException(status_code=404, detail="Product not found")
+    
+    for key, value in product_data.model_dump(exclude_unset=True).items():
+        setattr(db_product, key, value)
+        
+    db.commit()
+    db.refresh(db_product)
+    return db_product
+
+@app.delete("/products/{product_id}")
+def delete_product(product_id: int, db: Session = Depends(get_db)):
+    db_product = db.query(models.Product).filter(models.Product.product_id == product_id).first()
+    if not db_product:
+        raise HTTPException(status_code=404, detail="Product not found")
+    db.delete(db_product)
+    db.commit()
+    return {"message": "Product deleted successfully"}
+
+# ==========================================
+# 4. PURCHASE ORDERS API
+# ==========================================
+@app.get("/purchase-orders", response_model=List[schemas.PurchaseOrderResponse])
+def get_purchase_orders(db: Session = Depends(get_db)):
+    return db.query(models.PurchaseOrder).all()
 
 @app.post("/purchase-orders", response_model=schemas.PurchaseOrderResponse)
-def create_purchase_order(
-    po: schemas.PurchaseOrderCreate, 
-    db: Session = Depends(get_db), 
-    current_user: models.User = Depends(auth.get_current_user)
-):
-    """
-    Creates a new Purchase Order in the database.
-    """
-    # 1. Check karo ki Vendor exist karta hai ya nahi
-    db_vendor = db.query(models.Vendor).filter(models.Vendor.id == po.vendor_id).first()
-    if not db_vendor:
-        raise HTTPException(status_code=404, detail="Vendor not found")
-        
-    # 2. Check karo ki PO Number pehle se toh nahi hai
-    db_po = db.query(models.PurchaseOrder).filter(models.PurchaseOrder.po_number == po.po_number).first()
-    if db_po:
-        raise HTTPException(status_code=400, detail="PO Number already exists")
-
-    new_po = models.PurchaseOrder(
-        po_number=po.po_number,
-        vendor_id=po.vendor_id,
-        total_amount=po.total_amount,
-        status=po.status
-    )
-    db.add(new_po)
+def create_purchase_order(po: schemas.PurchaseOrderCreate, db: Session = Depends(get_db)):
+    db_po = models.PurchaseOrder(**po.model_dump())
+    db.add(db_po)
     db.commit()
-    db.refresh(new_po)
-    return new_po
+    db.refresh(db_po)
+    return db_po
 
-@app.get("/purchase-orders")
-def get_purchase_orders(
-    db: Session = Depends(get_db), 
-    current_user: models.User = Depends(auth.get_current_user)
-):
-    """
-    Retrieves all Purchase Orders from the database aur Vendor ka exact naam join karta hai.
-    """
-    # SQLAlchemy Join query to fetch PO and corresponding Vendor name directly
-    results = db.query(models.PurchaseOrder, models.Vendor.vendor_name)\
-                .outerjoin(models.Vendor, models.PurchaseOrder.vendor_id == models.Vendor.id)\
-                .all()
-    
-    formatted_pos = []
-    for po, vendor_name in results:
-        formatted_pos.append({
-            "id": po.id,
-            "po_number": po.po_number,
-            "vendor_id": po.vendor_id,
-            "vendor_name": vendor_name if vendor_name else "Unassigned",
-            "order_date": po.order_date,
-            "total_amount": po.total_amount,
-            "status": po.status
-        })
-        
-    return formatted_pos
-
-@app.delete("/purchase-orders/{po_id}")
-def delete_purchase_order(
-    po_id: int, 
-    db: Session = Depends(get_db), 
-    current_user: models.User = Depends(auth.get_current_user)
-):
-    """
-    Deletes a Purchase Order.
-    """
-    db_po = db.query(models.PurchaseOrder).filter(models.PurchaseOrder.id == po_id).first()
+@app.put("/purchase-orders/{po_id}", response_model=schemas.PurchaseOrderResponse)
+def update_purchase_order(po_id: int, po_data: schemas.PurchaseOrderCreate, db: Session = Depends(get_db)):
+    db_po = db.query(models.PurchaseOrder).filter(models.PurchaseOrder.po_id == po_id).first()
     if not db_po:
         raise HTTPException(status_code=404, detail="Purchase Order not found")
     
+    for key, value in po_data.model_dump(exclude_unset=True).items():
+        setattr(db_po, key, value)
+        
+    db.commit()
+    db.refresh(db_po)
+    return db_po
+
+@app.delete("/purchase-orders/{po_id}")
+def delete_purchase_order(po_id: int, db: Session = Depends(get_db)):
+    db_po = db.query(models.PurchaseOrder).filter(models.PurchaseOrder.po_id == po_id).first()
+    if not db_po:
+        raise HTTPException(status_code=404, detail="Purchase Order not found")
     db.delete(db_po)
     db.commit()
     return {"message": "Purchase Order deleted successfully"}
 
 # ==========================================
-# DASHBOARD ANALYTICS API
+# 5. DASHBOARD ANALYTICS API
 # ==========================================
-
 @app.get("/analytics")
-def get_dashboard_analytics(
-    db: Session = Depends(get_db), 
-    current_user: models.User = Depends(auth.get_current_user)
-):
-    """
-    Calculates real-time metrics for the main dashboard statistics.
-    """
-    # 1. Total Vendors
+def get_dashboard_analytics(db: Session = Depends(get_db)):
     total_vendors = db.query(models.Vendor).count()
-    
-    # 2. Active Vendors
     active_vendors = db.query(models.Vendor).filter(models.Vendor.status == "Active").count()
-    
-    # 3. Total Purchase Orders
     total_pos = db.query(models.PurchaseOrder).count()
     
-    # 4. Total Approved Spend (Amount)
     approved_spend = db.query(func.sum(models.PurchaseOrder.total_amount))\
-                       .filter(models.PurchaseOrder.status == "Approved")\
-                       .scalar() or 0.0
+        .filter(models.PurchaseOrder.order_status == "Approved").scalar() or 0.0
 
     return {
+        "totalVendors": total_vendors,
+        "activeVendors": active_vendors,
+        "totalPurchaseOrders": total_pos,
+        "approvedSpend": approved_spend,
         "total_vendors": total_vendors,
         "active_vendors": active_vendors,
         "total_purchase_orders": total_pos,
-        "total_approved_spend": approved_spend
+        "approved_spend": approved_spend
     }
-
-# ==========================================
-# CONTRACTS & COMPLIANCE API
-# ==========================================
-@app.get("/contracts", response_model=list[schemas.ContractResponse])
-def get_contracts(db: Session = Depends(get_db), current_user: models.User = Depends(auth.get_current_user)):
-    return db.query(models.Contract).all()
-
-@app.post("/contracts", response_model=schemas.ContractResponse)
-def create_contract(
-    contract: schemas.ContractCreate, 
-    db: Session = Depends(get_db), 
-    current_user: models.User = Depends(auth.get_current_user)
-):
-    new_contract = models.Contract(**contract.dict())
-    db.add(new_contract)
-    db.commit()
-    db.refresh(new_contract)
-    return new_contract
-
-@app.delete("/contracts/{contract_id}")
-def delete_contract(
-    contract_id: int, 
-    db: Session = Depends(get_db), 
-    current_user: models.User = Depends(auth.get_current_user)
-):
-    contract = db.query(models.Contract).filter(models.Contract.id == contract_id).first()
-    if not contract:
-        raise HTTPException(status_code=404, detail="Contract not found")
-    db.delete(contract)
-    db.commit()
-    return {"message": "Contract deleted successfully"}
-
-# ==========================================
-# USER MANAGEMENT API
-# ==========================================
-@app.get("/users")
-def get_all_users(db: Session = Depends(get_db), current_user: models.User = Depends(auth.get_current_user)):
-    users = db.query(models.User).all()
-    return [
-        {
-            "id": u.id, 
-            "username": u.email, 
-            "role": getattr(u, 'role', 'User'), 
-            "is_active": u.is_active
-        } 
-        for u in users
-    ]
-
-@app.post("/users")
-def add_new_user(user_data: dict, db: Session = Depends(get_db)):
-    hashed_pw = pwd_context.hash(user_data["password"])
-    
-    new_user = models.User(
-        email=user_data["username"], 
-        hashed_password=hashed_pw, 
-        role=user_data["role"], 
-        is_active=True
-    )
-    
-    try:
-        db.add(new_user)
-        db.commit()
-        return {"message": "User created successfully"}
-    except IntegrityError:
-        # Agar user pehle se hai, toh database transaction ko rollback karo aur error bhejo
-        db.rollback()
-        raise HTTPException(status_code=400, detail="Username already exists in the system")
-
-# ==========================================
-# PROCUREMENT APIs
-# ==========================================
-@app.post("/procurements", response_model=schemas.ProcurementResponse)
-def create_procurement(
-    req: schemas.ProcurementCreate, 
-    db: Session = Depends(get_db), 
-    current_user: models.User = Depends(auth.get_current_user)
-):
-    """
-    Creates a new procurement request.
-    """
-    new_req = models.ProcurementRequest(**req.dict())
-    db.add(new_req)
-    db.commit()
-    db.refresh(new_req)
-    return new_req
-
-@app.get("/procurements", response_model=list[schemas.ProcurementResponse])
-def get_procurements(
-    db: Session = Depends(get_db), 
-    current_user: models.User = Depends(auth.get_current_user)
-):
-    """
-    Retrieves all procurement requests.
-    """
-    return db.query(models.ProcurementRequest).all()
-
-# ==========================================
-# PERFORMANCE & RELIABILITY APIs
-# ==========================================
-@app.post("/performance", response_model=schemas.PerformanceResponse)
-def add_performance_record(
-    record: schemas.PerformanceCreate, 
-    db: Session = Depends(get_db), 
-    current_user: models.User = Depends(auth.get_current_user)
-):
-    """
-    Adds a new performance record for a vendor.
-    """
-    new_record = models.VendorPerformance(**record.dict())
-    db.add(new_record)
-    db.commit()
-    db.refresh(new_record)
-    return new_record
-
-@app.get("/performance", response_model=list[schemas.PerformanceResponse])
-def get_performance_records(
-    db: Session = Depends(get_db), 
-    current_user: models.User = Depends(auth.get_current_user)
-):
-    """
-    Retrieves all vendor performance records.
-    """
-    return db.query(models.VendorPerformance).all()

@@ -1,10 +1,9 @@
 <div class="dashboard-container" style="padding: 24px;">
   
-  <!-- Header Section -->
   <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px;">
     <div>
       <h2 style="margin: 0;">Purchase Orders</h2>
-      <p style="margin-top: 5px; color: gray;">Manage procurement and track vendor orders.</p>
+      <p style="margin-top: 5px; color: gray;">Manage and track all purchase orders according to ERD specifications.</p>
     </div>
     
     <button mat-raised-button color="primary" (click)="openAddPODialog()">
@@ -12,50 +11,85 @@
     </button>
   </div>
 
-  <!-- Data Table -->
-  <table mat-table [dataSource]="dataSource" class="mat-elevation-z8" style="width: 100%;">
-    
-    <!-- PO Number Column -->
-    <ng-container matColumnDef="po_number">
-      <th mat-header-cell *matHeaderCellDef> PO Number </th>
-      <td mat-cell *matCellDef="let element"> <strong>{{element.po_number}}</strong> </td>
-    </ng-container>
+  <!-- Scrollable container if columns overflow -->
+  <div style="overflow-x: auto;">
+    <table mat-table [dataSource]="dataSource" class="mat-elevation-z8" style="width: 100%; min-width: 1200px;">
+      
+      <ng-container matColumnDef="po_id">
+        <th mat-header-cell *matHeaderCellDef> PO ID </th>
+        <td mat-cell *matCellDef="let element"> {{element.po_id}} </td>
+      </ng-container>
 
-    <!-- Vendor Name Column (Relationship Magic!) -->
-    <ng-container matColumnDef="vendor_name">
-      <th mat-header-cell *matHeaderCellDef> Vendor </th>
-      <td mat-cell *matCellDef="let element"> {{element.vendor_name}} </td>
-    </ng-container>
+      <ng-container matColumnDef="po_number">
+        <th mat-header-cell *matHeaderCellDef> PO Number </th>
+        <td mat-cell *matCellDef="let element"> <strong>{{element.po_number}}</strong> </td>
+      </ng-container>
 
-    <!-- Date Column -->
-    <ng-container matColumnDef="order_date">
-      <th mat-header-cell *matHeaderCellDef> Date </th>
-      <td mat-cell *matCellDef="let element"> {{element.order_date | date:'mediumDate'}} </td>
-    </ng-container>
+      <ng-container matColumnDef="vendor_id">
+        <th mat-header-cell *matHeaderCellDef> Vendor ID </th>
+        <td mat-cell *matCellDef="let element"> {{element.vendor_id}} </td>
+      </ng-container>
 
-    <!-- Amount Column -->
-    <ng-container matColumnDef="total_amount">
-      <th mat-header-cell *matHeaderCellDef> Amount </th>
-      <td mat-cell *matCellDef="let element"> ₹{{element.total_amount}} </td>
-    </ng-container>
+      <ng-container matColumnDef="product_id">
+        <th mat-header-cell *matHeaderCellDef> Product ID </th>
+        <td mat-cell *matCellDef="let element"> {{element.product_id}} </td>
+      </ng-container>
 
-    <!-- Status Column -->
-    <ng-container matColumnDef="status">
-      <th mat-header-cell *matHeaderCellDef> Status </th>
-      <td mat-cell *matCellDef="let element"> <strong>{{element.status}}</strong> </td>
-    </ng-container>
+      <ng-container matColumnDef="quantity">
+        <th mat-header-cell *matHeaderCellDef> Quantity </th>
+        <td mat-cell *matCellDef="let element"> {{element.quantity}} </td>
+      </ng-container>
 
-    <!-- Actions Column -->
-    <ng-container matColumnDef="actions">
-      <th mat-header-cell *matHeaderCellDef> Actions </th>
-      <td mat-cell *matCellDef="let element">
-        <button mat-button color="warn" (click)="deletePO(element.id)" style="min-width: auto; padding: 0 8px; font-size: 16px;">
-          🗑️
-        </button>
-      </td>
-    </ng-container>
+      <ng-container matColumnDef="unit_price">
+        <th mat-header-cell *matHeaderCellDef> Unit Price </th>
+        <td mat-cell *matCellDef="let element"> ₹{{element.unit_price}} </td>
+      </ng-container>
 
-    <tr mat-header-row *matHeaderRowDef="displayedColumns"></tr>
-    <tr mat-row *matRowDef="let row; columns: displayedColumns;"></tr>
-  </table>
+      <ng-container matColumnDef="total_amount">
+        <th mat-header-cell *matHeaderCellDef> Total Amount </th>
+        <td mat-cell *matCellDef="let element"> <strong>₹{{element.total_amount}}</strong> </td>
+      </ng-container>
+
+      <ng-container matColumnDef="order_date">
+        <th mat-header-cell *matHeaderCellDef> Order Date </th>
+        <td mat-cell *matCellDef="let element"> {{element.order_date}} </td>
+      </ng-container>
+
+      <ng-container matColumnDef="expected_delivery_date">
+        <th mat-header-cell *matHeaderCellDef> Exp. Delivery </th>
+        <td mat-cell *matCellDef="let element"> {{element.expected_delivery_date}} </td>
+      </ng-container>
+
+      <ng-container matColumnDef="actual_delivery_date">
+        <th mat-header-cell *matHeaderCellDef> Act. Delivery </th>
+        <td mat-cell *matCellDef="let element"> {{element.actual_delivery_date || '-'}} </td>
+      </ng-container>
+
+      <ng-container matColumnDef="order_status">
+        <th mat-header-cell *matHeaderCellDef> Status </th>
+        <td mat-cell *matCellDef="let element"> 
+          <span [ngStyle]="{'color': element.order_status === 'Approved' ? 'green' : element.order_status === 'Pending' ? 'orange' : element.order_status === 'Cancelled' ? 'red' : 'blue', 'font-weight': '500'}">
+            {{element.order_status}}
+          </span>
+        </td>
+      </ng-container>
+
+      <ng-container matColumnDef="created_by">
+        <th mat-header-cell *matHeaderCellDef> Created By </th>
+        <td mat-cell *matCellDef="let element"> User-{{element.created_by}} </td>
+      </ng-container>
+
+      <!-- Actions Column (CRUD) -->
+      <ng-container matColumnDef="actions">
+        <th mat-header-cell *matHeaderCellDef style="text-align: right; position: sticky; right: 0; background: white; z-index: 1;"> Actions </th>
+        <td mat-cell *matCellDef="let element" style="text-align: right; position: sticky; right: 0; background: white; z-index: 1;">
+          <button mat-button color="primary" (click)="openAddPODialog(element)" style="min-width: 36px; padding: 0;" title="Edit">✏️</button>
+          <button mat-button color="warn" (click)="deletePO(element.po_id)" style="min-width: 36px; padding: 0;" title="Delete">🗑️</button>
+        </td>
+      </ng-container>
+
+      <tr mat-header-row *matHeaderRowDef="displayedColumns"></tr>
+      <tr mat-row *matRowDef="let row; columns: displayedColumns;"></tr>
+    </table>
+  </div>
 </div>

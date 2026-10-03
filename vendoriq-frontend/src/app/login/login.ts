@@ -1,5 +1,5 @@
 import { Component } from '@angular/core';
-import { HttpClient, HttpHeaders, HttpClientModule } from '@angular/common/http';
+import { HttpClient, HttpClientModule } from '@angular/common/http';
 import { Router } from '@angular/router';
 import { FormsModule } from '@angular/forms';
 import { CommonModule } from '@angular/common';
@@ -19,25 +19,23 @@ export class Login {
   constructor(private http: HttpClient, private router: Router) {}
 
   onLogin(event: Event) {
-    event.preventDefault(); // Page refresh hone se rokne ke liye
+    event.preventDefault(); 
     this.errorMessage = '';
 
-    // FastAPI ko data 'application/x-www-form-urlencoded' format me chahiye hota hai
-    const body = new URLSearchParams();
-    body.set('username', this.email);
-    body.set('password', this.password);
+    // NAYA: Ab hum URLSearchParams ki jagah sidha JSON object bhej rahe hain
+    const body = {
+      email: this.email,
+      password: this.password
+    };
 
-    const headers = new HttpHeaders({
-      'Content-Type': 'application/x-www-form-urlencoded'
-    });
-
-    this.http.post<any>('http://127.0.0.1:8000/users/login', body.toString(), { headers })
+    // Headers set karne ki zaroorat nahi, HttpClient JSON ke liye automatically set kar deta hai
+    this.http.post<any>('http://127.0.0.1:8000/users/login', body)
       .subscribe({
         next: (res) => {
           // Token save karein
           localStorage.setItem('access_token', res.access_token);
           
-          // 300ms ka chhota delay taaki token properly save ho jaye uske baad hi page redirect ho
+          // 300ms delay redirect ke liye
           setTimeout(() => {
             window.location.href = '/dashboard';
           }, 300);

@@ -1,0 +1,55 @@
+<div class="analytics-container">
+  <div class="header-section">
+    <h2>Dynamic Reliability Analytics</h2>
+    <p>Select a vendor to view their real-time performance metrics and AI recommendations.</p>
+    
+    <!-- Page loader jab vendors fetch ho rahe hon -->
+    <div class="loader-spinner" *ngIf="isPageLoading"></div>
+
+    <select *ngIf="!isPageLoading" class="vendor-select" [(ngModel)]="selectedVendorId" (change)="fetchVendorScore()">
+      <option [ngValue]="null" disabled>-- Select a Vendor --</option>
+      <option *ngFor="let vendor of vendors" [ngValue]="vendor.id || vendor.vendor_id">
+        {{ vendor.vendor_name || vendor.name || 'Unnamed Vendor' }}
+      </option>
+    </select>
+  </div>
+
+  <!-- Chart loader jab vendor select karne ke baad data aa raha ho -->
+  <div class="loading-overlay" *ngIf="isChartLoading">
+    <div class="loader-spinner"></div>
+    <p>Calculating live reliability metrics...</p>
+  </div>
+
+  <div class="dashboard-grid" *ngIf="scoreData && !isChartLoading">
+    <!-- Left Side: Score & AI Recommendation -->
+    <div class="score-card">
+      <h3>Reliability Score</h3>
+      <div class="score-circle" 
+           [ngClass]="{'high': scoreData.reliability_score >= 85, 'medium': scoreData.reliability_score >= 60 && scoreData.reliability_score < 85, 'low': scoreData.reliability_score < 60}">
+        {{ scoreData.reliability_score }}<span style="font-size: 20px;">/100</span>
+      </div>
+      
+      <div class="risk-badge" 
+           [ngClass]="{'bg-green': scoreData.risk_level === 'Low Risk', 'bg-orange': scoreData.risk_level === 'Medium Risk', 'bg-red': scoreData.risk_level === 'High Risk'}">
+        {{ scoreData.risk_level }}
+      </div>
+
+      <div class="ai-recommendation">
+        <h4>System Recommendation</h4>
+        <p>{{ scoreData.recommendation }}</p>
+      </div>
+    </div>
+
+    <!-- Right Side: Radar Chart -->
+    <div class="chart-card">
+      <h3>Metrics Breakdown</h3>
+      <div class="chart-wrapper">
+        <canvas baseChart
+                [data]="radarChartData"
+                [options]="radarChartOptions"
+                [type]="radarChartType">
+        </canvas>
+      </div>
+    </div>
+  </div>
+</div>
