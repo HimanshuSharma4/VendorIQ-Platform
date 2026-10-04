@@ -290,3 +290,25 @@ class QualityInspectionResponse(QualityInspectionBase):
     inspection_id: int
     class Config:
         from_attributes = True
+
+# ==========================================
+# COMMUNICATIONS SCHEMAS
+# ==========================================
+class CommunicationBase(BaseModel):
+    vendor_id: int
+    created_by: int  # ERD name (instead of user_id)
+    message_type: str
+    subject: str
+    message_body: str  # Kept to support UI message pop-up
+    communication_date: date  # ERD name (instead of sent_date)
+    response_time: Optional[int] = None
+    issue_status: str = "Open"
+    resolution_time: Optional[int] = None
+
+class CommunicationCreate(CommunicationBase):
+    pass
+
+class CommunicationResponse(CommunicationBase):
+    communication_id: int  # ERD exact PK name
+    class Config:
+        from_attributes = True

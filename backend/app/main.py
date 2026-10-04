@@ -274,6 +274,43 @@ def delete_quality_inspection(inspection_id: int, db: Session = Depends(get_db))
     return {"message": "Inspection deleted successfully"}
 
 # ==========================================
+# 8. COMMUNICATIONS API
+# ==========================================
+@app.get("/communications", response_model=List[schemas.CommunicationResponse])
+def get_communications(db: Session = Depends(get_db)):
+    return db.query(models.Communication).all()
+
+@app.post("/communications", response_model=schemas.CommunicationResponse)
+def create_communication(comm: schemas.CommunicationCreate, db: Session = Depends(get_db)):
+    db_comm = models.Communication(**comm.model_dump())
+    db.add(db_comm)
+    db.commit()
+    db.refresh(db_comm)
+    return db_comm
+
+@app.put("/communications/{communication_id}", response_model=schemas.CommunicationResponse)
+def update_communication(communication_id: int, comm_data: schemas.CommunicationCreate, db: Session = Depends(get_db)):
+    db_comm = db.query(models.Communication).filter(models.Communication.communication_id == communication_id).first()
+    if not db_comm:
+        raise HTTPException(status_code=404, detail="Record not found")
+    
+    for key, value in comm_data.model_dump(exclude_unset=True).items():
+        setattr(db_comm, key, value)
+        
+    db.commit()
+    db.refresh(db_comm)
+    return db_comm
+
+@app.delete("/communications/{communication_id}")
+def delete_communication(communication_id: int, db: Session = Depends(get_db)):
+    db_comm = db.query(models.Communication).filter(models.Communication.communication_id == communication_id).first()
+    if not db_comm:
+        raise HTTPException(status_code=404, detail="Record not found")
+    db.delete(db_comm)
+    db.commit()
+    return {"message": "Record deleted successfully"}
+
+# ==========================================
 # 6. DASHBOARD ANALYTICS API
 # ==========================================
 @app.get("/analytics")

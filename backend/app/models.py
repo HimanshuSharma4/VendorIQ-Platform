@@ -125,6 +125,7 @@ class Communication(Base):
     vendor_id = Column(Integer, ForeignKey("vendors.vendor_id"))
     message_type = Column(String)
     subject = Column(String)
+    message_body = Column(Text)  # <--- YE FIELD ADD KARNA ZAROORI HAI TEXT STORE KARNE KE LIYE
     response_time = Column(Float) # in hours
     issue_status = Column(String)
     resolution_time = Column(Float)
