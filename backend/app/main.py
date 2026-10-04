@@ -200,6 +200,43 @@ def delete_delivery(delivery_id: int, db: Session = Depends(get_db)):
     return {"message": "Delivery deleted successfully"}
 
 # ==========================================
+# 6. INVOICES API (New Module)
+# ==========================================
+@app.get("/invoices", response_model=List[schemas.InvoiceResponse])
+def get_invoices(db: Session = Depends(get_db)):
+    return db.query(models.Invoice).all()
+
+@app.post("/invoices", response_model=schemas.InvoiceResponse)
+def create_invoice(invoice: schemas.InvoiceCreate, db: Session = Depends(get_db)):
+    db_invoice = models.Invoice(**invoice.model_dump())
+    db.add(db_invoice)
+    db.commit()
+    db.refresh(db_invoice)
+    return db_invoice
+
+@app.put("/invoices/{invoice_id}", response_model=schemas.InvoiceResponse)
+def update_invoice(invoice_id: int, invoice_data: schemas.InvoiceCreate, db: Session = Depends(get_db)):
+    db_invoice = db.query(models.Invoice).filter(models.Invoice.invoice_id == invoice_id).first()
+    if not db_invoice:
+        raise HTTPException(status_code=404, detail="Invoice not found")
+    
+    for key, value in invoice_data.model_dump(exclude_unset=True).items():
+        setattr(db_invoice, key, value)
+        
+    db.commit()
+    db.refresh(db_invoice)
+    return db_invoice
+
+@app.delete("/invoices/{invoice_id}")
+def delete_invoice(invoice_id: int, db: Session = Depends(get_db)):
+    db_invoice = db.query(models.Invoice).filter(models.Invoice.invoice_id == invoice_id).first()
+    if not db_invoice:
+        raise HTTPException(status_code=404, detail="Invoice not found")
+    db.delete(db_invoice)
+    db.commit()
+    return {"message": "Invoice deleted successfully"}
+
+# ==========================================
 # 6. DASHBOARD ANALYTICS API
 # ==========================================
 @app.get("/analytics")

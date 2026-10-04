@@ -10,6 +10,7 @@ import { VendorsComponent } from './vendors/vendors';
 import { Procurement } from './procurement/procurement'; 
 import { VendorAnalytics } from './vendor-analytics/vendor-analytics'; 
 import { DeliveriesComponent } from './deliveries/deliveries';
+import { InvoicesComponent } from './invoices/invoices'; // NAYA IMPORT
 
 export const routes: Routes = [
   { path: 'login', component: Login },
@@ -23,12 +24,11 @@ export const routes: Routes = [
       { path: 'contracts', component: Contracts }, 
       { path: 'user-management', component: UserManagement }, 
       { path: 'vendors', component: VendorsComponent }, 
-      
-      // NAYA ROUTE YAHAN ADD KIYA HAI
       { path: 'products', component: Products }, 
-      
-      // NAYA DELIVERIES ROUTE YAHAN ADD KIYA HAI
       { path: 'deliveries', component: DeliveriesComponent },
+      
+      // NAYA INVOICES ROUTE
+      { path: 'invoices', component: InvoicesComponent },
       
       { path: 'procurement', component: Procurement }, 
       { path: 'performance', component: VendorAnalytics }, 

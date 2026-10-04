@@ -249,3 +249,24 @@ class DeliveryResponse(DeliveryBase):
     delivery_id: int
     class Config:
         from_attributes = True
+
+# ==========================================
+# INVOICES SCHEMAS
+# ==========================================
+class InvoiceBase(BaseModel):
+    po_id: int
+    vendor_id: int
+    invoice_number: str
+    invoice_date: date
+    due_date: date
+    invoice_amount: float
+    payment_date: Optional[date] = None
+    payment_status: str = "Pending"
+
+class InvoiceCreate(InvoiceBase):
+    pass
+
+class InvoiceResponse(InvoiceBase):
+    invoice_id: int
+    class Config:
+        from_attributes = True
