@@ -270,3 +270,23 @@ class InvoiceResponse(InvoiceBase):
     invoice_id: int
     class Config:
         from_attributes = True
+
+# ==========================================
+# QUALITY INSPECTION SCHEMAS
+# ==========================================
+class QualityInspectionBase(BaseModel):
+    po_id: int
+    vendor_id: int
+    inspection_date: date
+    quality_score: float
+    defective_quantity: int = 0
+    remarks: Optional[str] = None
+    inspected_by: Optional[int] = None
+
+class QualityInspectionCreate(QualityInspectionBase):
+    pass
+
+class QualityInspectionResponse(QualityInspectionBase):
+    inspection_id: int
+    class Config:
+        from_attributes = True

@@ -237,6 +237,43 @@ def delete_invoice(invoice_id: int, db: Session = Depends(get_db)):
     return {"message": "Invoice deleted successfully"}
 
 # ==========================================
+# 7. QUALITY INSPECTION API
+# ==========================================
+@app.get("/quality-inspections", response_model=List[schemas.QualityInspectionResponse])
+def get_quality_inspections(db: Session = Depends(get_db)):
+    return db.query(models.QualityInspection).all()
+
+@app.post("/quality-inspections", response_model=schemas.QualityInspectionResponse)
+def create_quality_inspection(inspection: schemas.QualityInspectionCreate, db: Session = Depends(get_db)):
+    db_inspection = models.QualityInspection(**inspection.model_dump())
+    db.add(db_inspection)
+    db.commit()
+    db.refresh(db_inspection)
+    return db_inspection
+
+@app.put("/quality-inspections/{inspection_id}", response_model=schemas.QualityInspectionResponse)
+def update_quality_inspection(inspection_id: int, inspection_data: schemas.QualityInspectionCreate, db: Session = Depends(get_db)):
+    db_inspection = db.query(models.QualityInspection).filter(models.QualityInspection.inspection_id == inspection_id).first()
+    if not db_inspection:
+        raise HTTPException(status_code=404, detail="Inspection not found")
+    
+    for key, value in inspection_data.model_dump(exclude_unset=True).items():
+        setattr(db_inspection, key, value)
+        
+    db.commit()
+    db.refresh(db_inspection)
+    return db_inspection
+
+@app.delete("/quality-inspections/{inspection_id}")
+def delete_quality_inspection(inspection_id: int, db: Session = Depends(get_db)):
+    db_inspection = db.query(models.QualityInspection).filter(models.QualityInspection.inspection_id == inspection_id).first()
+    if not db_inspection:
+        raise HTTPException(status_code=404, detail="Inspection not found")
+    db.delete(db_inspection)
+    db.commit()
+    return {"message": "Inspection deleted successfully"}
+
+# ==========================================
 # 6. DASHBOARD ANALYTICS API
 # ==========================================
 @app.get("/analytics")
