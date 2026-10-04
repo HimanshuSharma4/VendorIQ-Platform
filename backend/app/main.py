@@ -9,6 +9,7 @@ from typing import List
 from . import models, schemas
 from .database import engine, get_db
 
+# Tables create karne ke liye
 models.Base.metadata.create_all(bind=engine)
 
 app = FastAPI(title="VendorIQ Reliability Intelligence Platform")
@@ -162,7 +163,44 @@ def delete_purchase_order(po_id: int, db: Session = Depends(get_db)):
     return {"message": "Purchase Order deleted successfully"}
 
 # ==========================================
-# 5. DASHBOARD ANALYTICS API
+# 5. DELIVERIES API (New Module)
+# ==========================================
+@app.get("/deliveries", response_model=List[schemas.DeliveryResponse])
+def get_deliveries(db: Session = Depends(get_db)):
+    return db.query(models.Delivery).all()
+
+@app.post("/deliveries", response_model=schemas.DeliveryResponse)
+def create_delivery(delivery: schemas.DeliveryCreate, db: Session = Depends(get_db)):
+    db_delivery = models.Delivery(**delivery.model_dump())
+    db.add(db_delivery)
+    db.commit()
+    db.refresh(db_delivery)
+    return db_delivery
+
+@app.put("/deliveries/{delivery_id}", response_model=schemas.DeliveryResponse)
+def update_delivery(delivery_id: int, delivery_data: schemas.DeliveryCreate, db: Session = Depends(get_db)):
+    db_delivery = db.query(models.Delivery).filter(models.Delivery.delivery_id == delivery_id).first()
+    if not db_delivery:
+        raise HTTPException(status_code=404, detail="Delivery not found")
+    
+    for key, value in delivery_data.model_dump(exclude_unset=True).items():
+        setattr(db_delivery, key, value)
+        
+    db.commit()
+    db.refresh(db_delivery)
+    return db_delivery
+
+@app.delete("/deliveries/{delivery_id}")
+def delete_delivery(delivery_id: int, db: Session = Depends(get_db)):
+    db_delivery = db.query(models.Delivery).filter(models.Delivery.delivery_id == delivery_id).first()
+    if not db_delivery:
+        raise HTTPException(status_code=404, detail="Delivery not found")
+    db.delete(db_delivery)
+    db.commit()
+    return {"message": "Delivery deleted successfully"}
+
+# ==========================================
+# 6. DASHBOARD ANALYTICS API
 # ==========================================
 @app.get("/analytics")
 def get_dashboard_analytics(db: Session = Depends(get_db)):

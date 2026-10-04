@@ -5,7 +5,6 @@ from .database import Base
 
 class User(Base):
     __tablename__ = "users"
-
     user_id = Column(Integer, primary_key=True, index=True)
     name = Column(String, nullable=False)
     email = Column(String, unique=True, index=True, nullable=False)
@@ -16,7 +15,6 @@ class User(Base):
 
 class Vendor(Base):
     __tablename__ = "vendors"
-
     vendor_id = Column(Integer, primary_key=True, index=True)
     vendor_name = Column(String, nullable=False)
     category = Column(String)
@@ -38,7 +36,6 @@ class Vendor(Base):
 
 class Product(Base):
     __tablename__ = "products"
-
     product_id = Column(Integer, primary_key=True, index=True)
     vendor_id = Column(Integer, ForeignKey("vendors.vendor_id"))
     product_name = Column(String, nullable=False)
@@ -52,7 +49,6 @@ class Product(Base):
 
 class Contract(Base):
     __tablename__ = "contracts"
-
     contract_id = Column(Integer, primary_key=True, index=True)
     vendor_id = Column(Integer, ForeignKey("vendors.vendor_id"))
     start_date = Column(Date, nullable=False)
@@ -65,7 +61,6 @@ class Contract(Base):
 
 class PurchaseOrder(Base):
     __tablename__ = "purchase_orders"
-
     po_id = Column(Integer, primary_key=True, index=True)
     vendor_id = Column(Integer, ForeignKey("vendors.vendor_id"))
     product_id = Column(Integer, ForeignKey("products.product_id"))
@@ -87,7 +82,6 @@ class PurchaseOrder(Base):
 
 class Delivery(Base):
     __tablename__ = "deliveries"
-
     delivery_id = Column(Integer, primary_key=True, index=True)
     po_id = Column(Integer, ForeignKey("purchase_orders.po_id"))
     vendor_id = Column(Integer, ForeignKey("vendors.vendor_id"))
@@ -102,7 +96,6 @@ class Delivery(Base):
 
 class Invoice(Base):
     __tablename__ = "invoices"
-
     invoice_id = Column(Integer, primary_key=True, index=True)
     po_id = Column(Integer, ForeignKey("purchase_orders.po_id"))
     vendor_id = Column(Integer, ForeignKey("vendors.vendor_id"))
@@ -117,7 +110,6 @@ class Invoice(Base):
 
 class QualityInspection(Base):
     __tablename__ = "quality_inspection"
-
     inspection_id = Column(Integer, primary_key=True, index=True)
     po_id = Column(Integer, ForeignKey("purchase_orders.po_id"))
     vendor_id = Column(Integer, ForeignKey("vendors.vendor_id"))
@@ -129,7 +121,6 @@ class QualityInspection(Base):
 
 class Communication(Base):
     __tablename__ = "communications"
-
     communication_id = Column(Integer, primary_key=True, index=True)
     vendor_id = Column(Integer, ForeignKey("vendors.vendor_id"))
     message_type = Column(String)
@@ -142,7 +133,6 @@ class Communication(Base):
 
 class Notification(Base):
     __tablename__ = "notifications"
-
     notification_id = Column(Integer, primary_key=True, index=True)
     vendor_id = Column(Integer, ForeignKey("vendors.vendor_id"))
     notification_type = Column(String)
@@ -153,7 +143,6 @@ class Notification(Base):
 
 class VendorPerformance(Base):
     __tablename__ = "vendor_performance"
-
     performance_id = Column(Integer, primary_key=True, index=True)
     vendor_id = Column(Integer, ForeignKey("vendors.vendor_id"), unique=True)
     total_orders = Column(Integer, default=0)

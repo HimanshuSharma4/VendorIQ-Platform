@@ -228,3 +228,24 @@ class Token(BaseModel):
 
 class TokenData(BaseModel):
     email: Optional[str] = None
+
+from datetime import date
+from typing import Optional
+
+class DeliveryBase(BaseModel):
+    po_id: int
+    vendor_id: int
+    delivery_date: date
+    expected_delivery_date: date
+    delay_days: int = 0
+    delivery_status: str
+    damaged_goods: int = 0
+    delivery_notes: Optional[str] = None
+
+class DeliveryCreate(DeliveryBase):
+    pass
+
+class DeliveryResponse(DeliveryBase):
+    delivery_id: int
+    class Config:
+        from_attributes = True

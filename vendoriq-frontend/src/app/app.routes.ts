@@ -9,6 +9,7 @@ import { UserManagement } from './user-management/user-management';
 import { VendorsComponent } from './vendors/vendors'; 
 import { Procurement } from './procurement/procurement'; 
 import { VendorAnalytics } from './vendor-analytics/vendor-analytics'; 
+import { DeliveriesComponent } from './deliveries/deliveries';
 
 export const routes: Routes = [
   { path: 'login', component: Login },
@@ -25,6 +26,9 @@ export const routes: Routes = [
       
       // NAYA ROUTE YAHAN ADD KIYA HAI
       { path: 'products', component: Products }, 
+      
+      // NAYA DELIVERIES ROUTE YAHAN ADD KIYA HAI
+      { path: 'deliveries', component: DeliveriesComponent },
       
       { path: 'procurement', component: Procurement }, 
       { path: 'performance', component: VendorAnalytics }, 
