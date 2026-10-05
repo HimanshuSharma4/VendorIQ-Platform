@@ -312,3 +312,22 @@ class CommunicationResponse(CommunicationBase):
     communication_id: int  # ERD exact PK name
     class Config:
         from_attributes = True
+
+# ==========================================
+# NOTIFICATIONS SCHEMAS
+# ==========================================
+class NotificationBase(BaseModel):
+    vendor_id: int
+    notification_type: str
+    message: str
+    status: str = "Unread"
+    created_date: date
+    created_by: int
+
+class NotificationCreate(NotificationBase):
+    pass
+
+class NotificationResponse(NotificationBase):
+    notification_id: int
+    class Config:
+        from_attributes = True

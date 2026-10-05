@@ -12,7 +12,8 @@ import { VendorAnalytics } from './vendor-analytics/vendor-analytics';
 import { DeliveriesComponent } from './deliveries/deliveries';
 import { InvoicesComponent } from './invoices/invoices';
 import { QualityInspectionComponent } from './quality-inspection/quality-inspection';
-import { CommunicationsComponent } from './communications/communications'; // NAYA IMPORT
+import { CommunicationsComponent } from './communications/communications';
+import { NotificationsComponent } from './notifications/notifications'; // NAYA IMPORT
 
 export const routes: Routes = [
   { path: 'login', component: Login },
@@ -30,9 +31,10 @@ export const routes: Routes = [
       { path: 'deliveries', component: DeliveriesComponent },
       { path: 'invoices', component: InvoicesComponent },
       { path: 'quality-inspection', component: QualityInspectionComponent },
-      
-      // NAYA COMMUNICATIONS ROUTE
       { path: 'communications', component: CommunicationsComponent },
+      
+      // NAYA NOTIFICATIONS ROUTE
+      { path: 'notifications', component: NotificationsComponent },
       
       { path: 'procurement', component: Procurement }, 
       { path: 'performance', component: VendorAnalytics }, 

@@ -310,6 +310,43 @@ def delete_communication(communication_id: int, db: Session = Depends(get_db)):
     db.commit()
     return {"message": "Record deleted successfully"}
 
+
+# ==========================================
+# 9. NOTIFICATIONS API
+# ==========================================
+@app.get("/notifications", response_model=List[schemas.NotificationResponse])
+def get_notifications(db: Session = Depends(get_db)):
+    return db.query(models.Notification).all()
+
+@app.post("/notifications", response_model=schemas.NotificationResponse)
+def create_notification(notif: schemas.NotificationCreate, db: Session = Depends(get_db)):
+    db_notif = models.Notification(**notif.model_dump())
+    db.add(db_notif)
+    db.commit()
+    db.refresh(db_notif)
+    return db_notif
+
+# API to mark a notification as Read
+@app.put("/notifications/{notification_id}/read", response_model=schemas.NotificationResponse)
+def mark_notification_read(notification_id: int, db: Session = Depends(get_db)):
+    db_notif = db.query(models.Notification).filter(models.Notification.notification_id == notification_id).first()
+    if not db_notif:
+        raise HTTPException(status_code=404, detail="Notification not found")
+    
+    db_notif.status = "Read"
+    db.commit()
+    db.refresh(db_notif)
+    return db_notif
+
+@app.delete("/notifications/{notification_id}")
+def delete_notification(notification_id: int, db: Session = Depends(get_db)):
+    db_notif = db.query(models.Notification).filter(models.Notification.notification_id == notification_id).first()
+    if not db_notif:
+        raise HTTPException(status_code=404, detail="Notification not found")
+    db.delete(db_notif)
+    db.commit()
+    return {"message": "Notification deleted successfully"}
+
 # ==========================================
 # 6. DASHBOARD ANALYTICS API
 # ==========================================
