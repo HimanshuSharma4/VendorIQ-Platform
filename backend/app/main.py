@@ -51,8 +51,43 @@ def login_form(form_data: OAuth2PasswordRequestForm = Depends(), db: Session = D
         raise HTTPException(status_code=401, detail="Invalid credentials")
     return {"access_token": user.email, "token_type": "bearer"}
 
+# -- CRUD For Users Management Table --
+@app.get("/users", response_model=List[schemas.UserResponse])
+def get_users(db: Session = Depends(get_db)):
+    return db.query(models.User).all()
+
+@app.post("/users", response_model=schemas.UserResponse)
+def create_user(user: schemas.UserCreate, db: Session = Depends(get_db)):
+    db_user = models.User(**user.model_dump())
+    db.add(db_user)
+    db.commit()
+    db.refresh(db_user)
+    return db_user
+
+@app.put("/users/{user_id}", response_model=schemas.UserResponse)
+def update_user(user_id: int, user_data: schemas.UserBase, db: Session = Depends(get_db)):
+    db_user = db.query(models.User).filter(models.User.user_id == user_id).first()
+    if not db_user:
+        raise HTTPException(status_code=404, detail="User not found")
+    
+    for key, value in user_data.model_dump(exclude_unset=True).items():
+        setattr(db_user, key, value)
+        
+    db.commit()
+    db.refresh(db_user)
+    return db_user
+
+@app.delete("/users/{user_id}")
+def delete_user(user_id: int, db: Session = Depends(get_db)):
+    db_user = db.query(models.User).filter(models.User.user_id == user_id).first()
+    if not db_user:
+        raise HTTPException(status_code=404, detail="User not found")
+    db.delete(db_user)
+    db.commit()
+    return {"message": "User deleted successfully"}
+
 # ==========================================
-# 2. VENDORS API (Create, Read, Update, Delete)
+# 2. VENDORS API
 # ==========================================
 @app.get("/vendors", response_model=List[schemas.VendorResponse])
 def get_vendors(db: Session = Depends(get_db)):
@@ -163,7 +198,7 @@ def delete_purchase_order(po_id: int, db: Session = Depends(get_db)):
     return {"message": "Purchase Order deleted successfully"}
 
 # ==========================================
-# 5. DELIVERIES API (New Module)
+# 5. DELIVERIES API
 # ==========================================
 @app.get("/deliveries", response_model=List[schemas.DeliveryResponse])
 def get_deliveries(db: Session = Depends(get_db)):
@@ -200,7 +235,7 @@ def delete_delivery(delivery_id: int, db: Session = Depends(get_db)):
     return {"message": "Delivery deleted successfully"}
 
 # ==========================================
-# 6. INVOICES API (New Module)
+# 6. INVOICES API
 # ==========================================
 @app.get("/invoices", response_model=List[schemas.InvoiceResponse])
 def get_invoices(db: Session = Depends(get_db)):
@@ -326,7 +361,6 @@ def create_notification(notif: schemas.NotificationCreate, db: Session = Depends
     db.refresh(db_notif)
     return db_notif
 
-# API to mark a notification as Read
 @app.put("/notifications/{notification_id}/read", response_model=schemas.NotificationResponse)
 def mark_notification_read(notification_id: int, db: Session = Depends(get_db)):
     db_notif = db.query(models.Notification).filter(models.Notification.notification_id == notification_id).first()
@@ -348,7 +382,7 @@ def delete_notification(notification_id: int, db: Session = Depends(get_db)):
     return {"message": "Notification deleted successfully"}
 
 # ==========================================
-# 6. DASHBOARD ANALYTICS API
+# 10. DASHBOARD ANALYTICS API
 # ==========================================
 @app.get("/analytics")
 def get_dashboard_analytics(db: Session = Depends(get_db)):
