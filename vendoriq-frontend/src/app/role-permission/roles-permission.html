@@ -1,0 +1,228 @@
+
+<div class="roles-page">
+  <div class="page-heading">
+    <div>
+      <h1>Role &amp; Permission</h1>
+      <p>Manage platform roles and control access to every module.</p>
+    </div>
+
+    <button class="primary-btn" (click)="openCreateRole()">
+      <span>＋</span> Create New Role
+    </button>
+  </div>
+
+  <div class="summary-grid">
+    <div class="summary-card">
+      <div class="summary-icon purple-bg">♟</div>
+      <div>
+        <p>Total Roles</p>
+        <h2>{{ roles.length }}</h2>
+        <small>Defined access roles</small>
+      </div>
+    </div>
+
+    <div class="summary-card">
+      <div class="summary-icon blue-bg">♙</div>
+      <div>
+        <p>Assigned Users</p>
+        <h2>{{ totalAssignedUsers }}</h2>
+        <small>Across all roles</small>
+      </div>
+    </div>
+
+    <div class="summary-card">
+      <div class="summary-icon green-bg">✓</div>
+      <div>
+        <p>Available Modules</p>
+        <h2>{{ modules.length }}</h2>
+        <small>Access-controlled modules</small>
+      </div>
+    </div>
+
+    <div class="summary-card">
+      <div class="summary-icon orange-bg">⚿</div>
+      <div>
+        <p>Selected Permissions</p>
+        <h2>{{ permissionCount }}</h2>
+        <small>{{ selectedRole.name }}</small>
+      </div>
+    </div>
+  </div>
+
+  <div class="content-grid">
+    <section class="panel roles-panel">
+      <div class="panel-heading">
+        <div>
+          <h2>Platform Roles</h2>
+          <p>Select a role to manage its access.</p>
+        </div>
+        <span class="count-badge">{{ filteredRoles.length }} roles</span>
+      </div>
+
+      <div class="search-box">
+        <span>⌕</span>
+        <input
+          type="text"
+          [(ngModel)]="searchTerm"
+          placeholder="Search roles..."
+        />
+      </div>
+
+      <div class="role-list">
+        <button
+          type="button"
+          class="role-item"
+          *ngFor="let role of filteredRoles"
+          [class.selected]="selectedRoleId === role.id"
+          (click)="selectedRoleId = role.id"
+        >
+          <div class="role-avatar" [ngClass]="role.color">
+            {{ role.name.charAt(0) }}
+          </div>
+
+          <div class="role-info">
+            <strong>{{ role.name }}</strong>
+            <span>{{ role.description }}</span>
+            <small>{{ role.users }} assigned users</small>
+          </div>
+
+          <span class="role-arrow">›</span>
+        </button>
+
+        <div class="empty-state" *ngIf="filteredRoles.length === 0">
+          No matching roles found.
+        </div>
+      </div>
+
+      <div class="role-actions" *ngIf="selectedRole">
+        <button
+          type="button"
+          class="secondary-btn"
+          [disabled]="selectedRole.id === 1"
+          (click)="openEditRole(selectedRole)"
+        >
+          Edit Role
+        </button>
+
+        <button
+          type="button"
+          class="danger-btn"
+          [disabled]="selectedRole.id === 1"
+          (click)="deleteRole(selectedRole)"
+        >
+          Delete
+        </button>
+      </div>
+    </section>
+
+    <section class="panel permissions-panel" *ngIf="selectedRole">
+      <div class="panel-heading">
+        <div>
+          <h2>Permission Matrix</h2>
+          <p>Configure access for {{ selectedRole.name }}.</p>
+        </div>
+        <span class="role-level" [ngClass]="selectedRole.color">
+          {{ selectedRole.level }}
+        </span>
+      </div>
+
+      <div class="notice" *ngIf="selectedRole.id === 1">
+        <span>🔒</span>
+        Super Administrator has full access. Its permissions are locked.
+      </div>
+
+      <div class="notice" *ngIf="selectedRole.id !== 1">
+        Select the actions this role is allowed to perform.
+        Changes currently apply to this page only.
+      </div>
+
+      <div class="matrix-wrap">
+        <table class="permission-table">
+          <thead>
+            <tr>
+              <th>Module</th>
+              <th *ngFor="let action of actions">{{ action }}</th>
+            </tr>
+          </thead>
+
+          <tbody>
+            <tr *ngFor="let module of modules">
+              <td class="module-name">{{ module }}</td>
+
+              <td *ngFor="let action of actions" class="check-cell">
+                <input
+                  type="checkbox"
+                  [checked]="hasPermission(module, action)"
+                  [disabled]="selectedRole.id === 1"
+                  [attr.aria-label]="module + ' ' + action"
+                  (change)="togglePermission(
+                    module,
+                    action,
+                    $any($event.target).checked
+                  )"
+                />
+              </td>
+            </tr>
+          </tbody>
+        </table>
+      </div>
+
+      <div class="permission-footer">
+        <span>
+          {{ permissionCount }} permissions enabled
+        </span>
+        <span class="local-badge">Local demo</span>
+      </div>
+    </section>
+  </div>
+
+  <div class="modal-backdrop" *ngIf="showRoleForm">
+    <div class="role-modal" role="dialog" aria-modal="true"
+         aria-labelledby="role-modal-title">
+      <div class="modal-heading">
+        <div>
+          <h2 id="role-modal-title">
+            {{ editingRoleId !== null ? 'Edit Role' : 'Create New Role' }}
+          </h2>
+          <p>Enter the role details below.</p>
+        </div>
+        <button class="close-btn" (click)="showRoleForm = false">×</button>
+      </div>
+
+      <form (ngSubmit)="saveRole()">
+        <label for="roleName">Role Name</label>
+        <input
+          id="roleName"
+          name="roleName"
+          [(ngModel)]="newRoleName"
+          required
+          maxlength="80"
+          placeholder="e.g. Inventory Manager"
+        />
+
+        <label for="roleDescription">Description</label>
+        <textarea
+          id="roleDescription"
+          name="roleDescription"
+          [(ngModel)]="newRoleDescription"
+          maxlength="250"
+          rows="3"
+          placeholder="Describe the role's responsibilities"
+        ></textarea>
+
+        <div class="modal-actions">
+          <button
+            type="button"
+            class="secondary-btn"
+            (click)="showRoleForm = false"
+          >
+            Cancel
+          </button>
+          <button type="submit" class="primary-btn">
+            {{ editingRoleId !== null ? 'Save Changes' : 'Create Role' }}
+          </button>
+        </div>
+      </form>
+    </div>
+  </div>
+</div>

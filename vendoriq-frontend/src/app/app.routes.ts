@@ -14,6 +14,8 @@ import { InvoicesComponent } from './invoices/invoices';
 import { QualityInspectionComponent } from './quality-inspection/quality-inspection';
 import { CommunicationsComponent } from './communications/communications';
 import { NotificationsComponent } from './notifications/notifications'; // NAYA IMPORT
+import { ActivityLogs } from './activity-logs/activity-logs';
+import { RolesPermissionComponent } from './role-permission/roles-permission';
 
 export const routes: Routes = [
   { path: 'login', component: Login },
@@ -32,6 +34,8 @@ export const routes: Routes = [
       { path: 'invoices', component: InvoicesComponent },
       { path: 'quality-inspection', component: QualityInspectionComponent },
       { path: 'communications', component: CommunicationsComponent },
+      { path: 'activity-logs', component: ActivityLogs },
+      { path: 'role-permission', component: RolesPermissionComponent },
       
       // NAYA NOTIFICATIONS ROUTE
       { path: 'notifications', component: NotificationsComponent },

@@ -1,0 +1,284 @@
+
+:host {
+  display: block;
+  color: #20294a;
+}
+
+.activity-page {
+  min-height: 100%;
+  padding: 28px;
+  box-sizing: border-box;
+  background: #f5f7ff;
+}
+
+.page-header,
+.table-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: 16px;
+}
+
+.page-header {
+  margin-bottom: 26px;
+}
+
+h1 {
+  font-size: 27px;
+  margin: 0 0 8px;
+}
+
+h2 {
+  font-size: 21px;
+  margin: 0 0 8px;
+}
+
+p {
+  color: #77819a;
+  font-size: 13px;
+  margin: 0;
+}
+
+button, input, select {
+  font: inherit;
+}
+
+button {
+  cursor: pointer;
+}
+
+.export-btn {
+  border: 0;
+  border-radius: 8px;
+  padding: 12px 18px;
+  color: white;
+  background: #5938e8;
+}
+
+.stats-grid {
+  display: grid;
+  grid-template-columns: repeat(4, minmax(0, 1fr));
+  gap: 16px;
+  margin-bottom: 22px;
+}
+
+.stat-card {
+  display: flex;
+  align-items: center;
+  gap: 14px;
+  padding: 20px;
+  background: white;
+  border: 1px solid #e8eafa;
+  border-radius: 12px;
+  box-shadow: 0 3px 10px #20294a08;
+}
+
+.stat-icon {
+  width: 46px;
+  height: 46px;
+  flex-shrink: 0;
+  display: grid;
+  place-items: center;
+  border-radius: 12px;
+  font-size: 25px;
+  font-weight: bold;
+}
+
+.stat-card p {
+  margin-bottom: 7px;
+}
+
+.stat-card h2 {
+  font-size: 27px;
+  margin-bottom: 6px;
+}
+
+.stat-card small {
+  color: #8a94a9;
+  font-size: 11px;
+}
+
+.purple .stat-icon {
+  color: #6840e8;
+  background: #eee8ff;
+}
+
+.green .stat-icon {
+  color: #0baf69;
+  background: #e0f8ed;
+}
+
+.orange .stat-icon {
+  color: #e99400;
+  background: #fff1d9;
+}
+
+.red .stat-icon {
+  color: #e83c4b;
+  background: #ffe7e9;
+}
+
+.filter-panel,
+.table-panel {
+  background: white;
+  border: 1px solid #e7eafa;
+  border-radius: 12px;
+  box-shadow: 0 3px 10px #20294a08;
+}
+
+.filter-panel {
+  display: grid;
+  grid-template-columns: minmax(180px, 2fr) repeat(2, minmax(140px, 1fr)) auto;
+  gap: 14px;
+  align-items: end;
+  padding: 20px;
+  margin-bottom: 22px;
+}
+
+.filter-field label {
+  display: block;
+  font-size: 12px;
+  font-weight: 600;
+  color: #47536e;
+  margin-bottom: 8px;
+}
+
+.filter-field input,
+.filter-field select {
+  width: 100%;
+  height: 42px;
+  box-sizing: border-box;
+  padding: 0 10px;
+  border: 1px solid #dfe4f3;
+  border-radius: 8px;
+  background: white;
+  color: #303b58;
+}
+
+.clear-btn {
+  height: 42px;
+  padding: 0 14px;
+  border: 1px solid #dfe4f3;
+  background: white;
+  color: #5938e8;
+  border-radius: 8px;
+}
+
+.table-panel {
+  overflow: hidden;
+}
+
+.table-header {
+  padding: 22px;
+}
+
+.table-header p {
+  margin-top: 5px;
+}
+
+.record-count {
+  background: #f0edff;
+  color: #6344df;
+  padding: 7px 11px;
+  border-radius: 20px;
+  font-size: 12px;
+  white-space: nowrap;
+}
+
+.table-scroll {
+  overflow-x: auto;
+}
+
+table {
+  width: 100%;
+  border-collapse: collapse;
+  text-align: left;
+  white-space: nowrap;
+}
+
+thead {
+  background: #f5f4ff;
+}
+
+th, td {
+  padding: 14px 16px;
+  border-bottom: 1px solid #edf0f8;
+  font-size: 12px;
+}
+
+th {
+  color: #56617d;
+}
+
+td {
+  color: #48536d;
+}
+
+tbody tr:hover {
+  background: #fafaff;
+}
+
+.badge {
+  display: inline-block;
+  padding: 6px 10px;
+  border-radius: 6px;
+  font-size: 11px;
+  font-weight: 600;
+}
+
+.info, .success {
+  background: #e4f9ef;
+  color: #128657;
+}
+
+.warning {
+  background: #fff3d8;
+  color: #a96a00;
+}
+
+.critical, .failed {
+  background: #ffe7e9;
+  color: #c62c40;
+}
+
+.empty-state {
+  text-align: center;
+  padding: 35px;
+}
+
+.table-footer {
+  padding: 16px 22px;
+  color: #7b849a;
+  font-size: 12px;
+}
+
+.demo-note {
+  margin-top: 14px;
+  font-size: 12px;
+}
+
+@media (max-width: 1000px) {
+  .stats-grid {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+
+  .filter-panel {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+}
+
+@media (max-width: 600px) {
+  .activity-page {
+    padding: 16px;
+  }
+
+  .page-header {
+    align-items: flex-start;
+    flex-direction: column;
+  }
+
+  .stats-grid,
+  .filter-panel {
+    grid-template-columns: 1fr;
+  }
+}
