@@ -1,119 +1,82 @@
-import { Component, OnInit, ChangeDetectorRef } from '@angular/core';
+import { Component, OnInit } from '@angular/core';
+import { HttpClient, HttpClientModule } from '@angular/common/http';
 import { CommonModule } from '@angular/common';
-import { HttpClient, HttpHeaders, HttpClientModule } from '@angular/common/http';
-import { BaseChartDirective } from 'ng2-charts'; 
-import { ChartConfiguration, ChartType } from 'chart.js';
-import { FormsModule } from '@angular/forms';
+import { MatTableModule, MatTableDataSource } from '@angular/material/table';
+import { MatProgressBarModule } from '@angular/material/progress-bar';
+import { MatButtonModule } from '@angular/material/button';
 
 @Component({
   selector: 'app-vendor-analytics',
   standalone: true,
-  imports: [CommonModule, HttpClientModule, BaseChartDirective, FormsModule], 
+  imports: [CommonModule, HttpClientModule, MatTableModule, MatProgressBarModule, MatButtonModule],
   templateUrl: './vendor-analytics.html',
   styleUrls: ['./vendor-analytics.css']
 })
 export class VendorAnalytics implements OnInit {
-  vendors: any[] = [];
-  selectedVendorId: number | null = null;
-  scoreData: any = null;
+  displayedColumns: string[] = [
+    'vendor_id', 'orders', 'on_time_delivery', 'quality_score', 'response_time', 'reliability_score', 'risk_level'
+  ];
+  dataSource = new MatTableDataSource<any>([]);
 
-  isPageLoading: boolean = true; 
-  isChartLoading: boolean = false;
-
-  public radarChartOptions: ChartConfiguration['options'] = {
-    responsive: true,
-    maintainAspectRatio: false, 
-    layout: {
-      padding: 30 
-    },
-    scales: {
-      r: {
-        angleLines: { color: 'rgba(255, 255, 255, 0.1)' },
-        grid: { color: 'rgba(255, 255, 255, 0.1)' },
-        pointLabels: { color: '#a0a5ba', font: { size: 14 } },
-        min: 0, 
-        max: 30, 
-        ticks: { display: false }
-      }
-    },
-    plugins: {
-      legend: { labels: { color: 'white' } }
-    }
-  };
-  public radarChartLabels: string[] = ['Quality (30)', 'Delivery (30)', 'Compliance (20)', 'PO Success (20)'];
-  public radarChartData: ChartConfiguration['data'] = {
-    datasets: [{ data: [], label: 'Metrics Breakdown' }]
-  };
-  public radarChartType: ChartType = 'radar';
-
-  // Constructor me ChangeDetectorRef add kiya
-  constructor(private http: HttpClient, private cdr: ChangeDetectorRef) {}
+  constructor(private http: HttpClient) {}
 
   ngOnInit(): void {
-    this.fetchVendors();
+    this.fetchPerformanceData();
   }
 
-  fetchVendors(): void {
-    this.isPageLoading = true;
-    const token = localStorage.getItem('access_token');
-    const headers = new HttpHeaders({ 'Authorization': `Bearer ${token}` });
-
-    this.http.get<any>('http://127.0.0.1:8000/vendors', { headers }).subscribe({
-      next: (data) => {
-        this.vendors = Array.isArray(data) ? data : (data.items || data.data || []);
-        this.isPageLoading = false;
-        this.cdr.detectChanges(); // UI Update Force kiya
-      },
-      error: (err) => {
-        console.error('Error fetching vendors', err);
-        this.isPageLoading = false; 
-        this.cdr.detectChanges(); // UI Update Force kiya
-      }
+  fetchPerformanceData(): void {
+    this.http.get<any[]>('http://127.0.0.1:8000/vendor-performance').subscribe({
+      next: (data) => this.dataSource.data = data,
+      error: (err) => console.error("Error fetching data", err)
     });
   }
 
-  fetchVendorScore(): void {
-    if (!this.selectedVendorId) return;
-
-    this.isChartLoading = true; 
-    this.scoreData = null; 
-
-    const token = localStorage.getItem('access_token');
-    const headers = new HttpHeaders({ 'Authorization': `Bearer ${token}` });
-
-    this.http.get<any>(`http://127.0.0.1:8000/vendors/${this.selectedVendorId}/reliability-score`, { headers })
-      .subscribe({
-        next: (data) => {
-          this.scoreData = data;
-          this.radarChartData = {
-            labels: this.radarChartLabels,
-            datasets: [
-              {
-                data: [
-                  data.metrics_breakdown.quality_points,
-                  data.metrics_breakdown.delivery_points,
-                  data.metrics_breakdown.compliance_points,
-                  data.metrics_breakdown.history_points
-                ],
-                label: 'Vendor Performance',
-                backgroundColor: 'rgba(74, 58, 255, 0.4)',
-                borderColor: '#4a3aff',
-                pointBackgroundColor: '#fff',
-                pointBorderColor: '#4a3aff',
-                pointHoverBackgroundColor: '#fff',
-                pointHoverBorderColor: '#4a3aff',
-                fill: true
-              }
-            ]
-          };
-          this.isChartLoading = false;
-          this.cdr.detectChanges(); // UI Update Force kiya
+  recalculateScore(): void {
+    const vendorId = prompt("Enter Vendor ID to recalculate scores from database:");
+    if (vendorId) {
+      this.http.post(`http://127.0.0.1:8000/vendor-performance/${vendorId}/calculate`, {}).subscribe({
+        next: () => {
+          alert('Scores calculated & updated successfully!');
+          this.fetchPerformanceData();
         },
-        error: (err) => {
-          console.error('Error fetching score', err);
-          this.isChartLoading = false; 
-          this.cdr.detectChanges(); // UI Update Force kiya
-        }
+        error: () => alert('Error calculating score. Make sure Vendor ID exists.')
       });
+    }
+  }
+
+  exportToCSV(): void {
+    const data = this.dataSource.data;
+    if (data.length === 0) return alert("No data to export!");
+    
+    const headers = ['Vendor ID', 'Completed Orders', 'Total Orders', 'On-Time Delivery (%)', 'Quality Score', 'Avg Response (hrs)', 'Final Score', 'Risk Level'];
+    const csvRows = [headers.join(',')];
+    
+    data.forEach(row => {
+      const values = [
+        row.vendor_id, row.completed_orders, row.total_orders, 
+        row.on_time_delivery_percentage, row.quality_score, 
+        row.average_response_time_hours, row.reliability_score, row.risk_level
+      ];
+      csvRows.push(values.join(','));
+    });
+    
+    const blob = new Blob([csvRows.join('\n')], { type: 'text/csv' });
+    const url = window.URL.createObjectURL(blob);
+    const a = document.createElement('a');
+    a.href = url;
+    a.download = `Vendor_Reliability_Report.csv`;
+    a.click();
+    window.URL.revokeObjectURL(url);
+  }
+
+  exportToPDF(): void {
+    window.print(); // Browser ka native PDF generator open karega
+  }
+
+  getRiskStyle(risk: string) {
+    if (risk === 'Low') return { 'background-color': '#4caf50' }; 
+    if (risk === 'Medium') return { 'background-color': '#ff9800' }; 
+    if (risk === 'High') return { 'background-color': '#f44336' }; 
+    return { 'background-color': '#9e9e9e' }; 
   }
 }

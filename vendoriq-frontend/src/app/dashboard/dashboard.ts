@@ -14,10 +14,9 @@ export class Dashboard implements OnInit {
     total_vendors: 0,
     active_vendors: 0,
     total_purchase_orders: 0,
-    total_approved_spend: 0
+    approved_spend: 0  // Yahan name fix kiya hai
   };
 
-  // ChangeDetectorRef ko inject kiya hai
   constructor(private http: HttpClient, private cdr: ChangeDetectorRef) {}
 
   ngOnInit(): void {
@@ -34,7 +33,6 @@ export class Dashboard implements OnInit {
       .subscribe({
         next: (data) => {
           this.stats = data;
-          // Ye line Angular ko batati hai ki data aa gaya hai, abhi ke abhi screen update karo
           this.cdr.detectChanges(); 
         },
         error: (err) => console.error('Error fetching dashboard analytics:', err)

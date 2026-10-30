@@ -26,7 +26,8 @@
     
     <div style="flex: 1; background: white; padding: 20px; border-radius: 8px; box-shadow: 0 2px 4px rgba(0,0,0,0.05); border-left: 5px solid #f44336;">
       <p style="margin: 0; color: #666; font-size: 14px;">Approved Spend</p>
-      <h2 style="margin: 10px 0 0; font-size: 28px; color: #333;">₹{{ stats.total_approved_spend }}</h2>
+      <!-- Yahan name fix kiya aur comma add karne ke liye number pipe lagaya -->
+      <h2 style="margin: 10px 0 0; font-size: 28px; color: #333;">₹{{ stats.approved_spend | number }}</h2>
     </div>
   </div>
 </div>

@@ -747,3 +747,74 @@ def create_activity_log(
             status_code=500,
             detail="Could not create activity log",
         )
+# ==========================================
+# 12. VENDOR PERFORMANCE & RELIABILITY API
+# ==========================================
+@app.post("/vendor-performance/{vendor_id}/calculate", response_model=schemas.VendorPerformanceResponse)
+def calculate_vendor_performance(vendor_id: int, db: Session = Depends(get_db)):
+    # 1. Total & Completed Orders
+    total_orders = db.query(models.PurchaseOrder).filter(models.PurchaseOrder.vendor_id == vendor_id).count()
+    completed_orders = db.query(models.PurchaseOrder).filter(
+        models.PurchaseOrder.vendor_id == vendor_id, 
+        models.PurchaseOrder.order_status == "Completed"
+    ).count()
+
+    # 2. On-Time Delivery & Average Delay
+    deliveries = db.query(models.Delivery).filter(models.Delivery.vendor_id == vendor_id).all()
+    total_deliveries = len(deliveries)
+    on_time_deliveries = sum(1 for d in deliveries if (d.delay_days or 0) <= 0)
+    
+    on_time_delivery_percentage = (on_time_deliveries / total_deliveries * 100) if total_deliveries > 0 else 0.0
+    average_delay_days = sum((d.delay_days or 0) for d in deliveries) / total_deliveries if total_deliveries > 0 else 0.0
+
+    # 3. Quality Score
+    inspections = db.query(models.QualityInspection).filter(models.QualityInspection.vendor_id == vendor_id).all()
+    total_inspections = len(inspections)
+    quality_score_avg = sum((i.quality_score or 0) for i in inspections) / total_inspections if total_inspections > 0 else 0.0
+
+    # 4. Average Response Time
+    communications = db.query(models.Communication).filter(models.Communication.vendor_id == vendor_id).all()
+    valid_comms = [c for c in communications if c.response_time is not None]
+    total_comms = len(valid_comms)
+    average_response_time_hours = sum(c.response_time for c in valid_comms) / total_comms if total_comms > 0 else 0.0
+
+    # 5. Reliability Score Calculation
+    quality_percentage = quality_score_avg * 10 if quality_score_avg <= 10 else quality_score_avg
+    reliability_score = (on_time_delivery_percentage * 0.5) + (quality_percentage * 0.5)
+    
+    # 6. Risk Level Mapping
+    risk_level = "Low"
+    if reliability_score < 50:
+        risk_level = "High"
+    elif reliability_score < 75:
+        risk_level = "Medium"
+
+    # 7. Update existing record or Create new
+    performance = db.query(models.VendorPerformance).filter(models.VendorPerformance.vendor_id == vendor_id).first()
+    
+    perf_data = {
+        "vendor_id": vendor_id,
+        "total_orders": total_orders,
+        "completed_orders": completed_orders,
+        "on_time_delivery_percentage": round(on_time_delivery_percentage, 2),
+        "average_delay_days": round(average_delay_days, 2),
+        "quality_score": round(quality_score_avg, 2),
+        "average_response_time_hours": round(average_response_time_hours, 2),
+        "reliability_score": round(reliability_score, 2),
+        "risk_level": risk_level
+    }
+
+    if performance:
+        for key, value in perf_data.items():
+            setattr(performance, key, value)
+    else:
+        performance = models.VendorPerformance(**perf_data)
+        db.add(performance)
+        
+    db.commit()
+    db.refresh(performance)
+    return performance
+
+@app.get("/vendor-performance", response_model=List[schemas.VendorPerformanceResponse])
+def get_all_vendor_performances(db: Session = Depends(get_db)):
+    return db.query(models.VendorPerformance).all()
