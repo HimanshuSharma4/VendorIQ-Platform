@@ -1,91 +1,67 @@
-
-import { Component } from '@angular/core';
+import { Component, OnInit } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
+import { HttpClient, HttpHeaders, HttpClientModule } from '@angular/common/http';
 
 interface ActivityLog {
+  id?: number;
   timestamp: string;
   user: string;
   action: string;
   module: string;
-  severity: 'Info' | 'Warning' | 'Critical';
-  status: 'Success' | 'Failed';
+  severity: string;
+  status: string;
 }
 
 @Component({
   selector: 'app-activity-logs',
   standalone: true,
-  imports: [CommonModule, FormsModule],
+  imports: [CommonModule, FormsModule, HttpClientModule],
   templateUrl: './activity-logs.html',
   styleUrl: './activity-logs.css'
 })
-export class ActivityLogs {
+export class ActivityLogs implements OnInit {
   searchText = '';
   selectedSeverity = 'All';
   selectedStatus = 'All';
 
-  // Sample data for the initial page design.
-  // Later, we will load real records from FastAPI.
-  logs: ActivityLog[] = [
-    {
-      timestamp: '2026-10-15 09:24:18',
-      user: 'Admin User',
-      action: 'User logged in',
-      module: 'Authentication',
-      severity: 'Info',
-      status: 'Success'
-    },
-    {
-      timestamp: '2026-10-15 09:17:32',
-      user: 'Sneha Verma',
-      action: 'Updated vendor profile',
-      module: 'Vendors',
-      severity: 'Info',
-      status: 'Success'
-    },
-    {
-      timestamp: '2026-10-15 09:12:11',
-      user: 'Finance Manager',
-      action: 'Approved purchase order',
-      module: 'Purchase Orders',
-      severity: 'Info',
-      status: 'Success'
-    },
-    {
-      timestamp: '2026-10-15 08:45:56',
-      user: 'Admin User',
-      action: 'Changed user role',
-      module: 'User Management',
-      severity: 'Warning',
-      status: 'Success'
-    },
-    {
-      timestamp: '2026-10-15 08:21:03',
-      user: 'Raj Kumar',
-      action: 'Failed login attempt',
-      module: 'Authentication',
-      severity: 'Critical',
-      status: 'Failed'
-    },
-    {
-      timestamp: '2026-10-15 08:10:29',
-      user: 'Anjali Joshi',
-      action: 'Created new contract',
-      module: 'Contracts',
-      severity: 'Info',
-      status: 'Success'
-    }
-  ];
+  logs: ActivityLog[] = [];
+
+  constructor(private http: HttpClient) {}
+
+  ngOnInit(): void {
+    this.fetchActivityLogs();
+  }
+
+  fetchActivityLogs(): void {
+    const token = localStorage.getItem('access_token');
+    const headers = new HttpHeaders({ 'Authorization': `Bearer ${token}` });
+
+    this.http.get<any>('http://127.0.0.1:8000/activity-logs', { headers })
+      .subscribe({
+        next: (data) => {
+          // SAFETY CHECK: Ensure data is an array before assigning
+          this.logs = Array.isArray(data) ? data : [];
+        },
+        error: (err) => {
+          console.error('Error fetching activity logs:', err);
+          this.logs = []; // Fallback to empty array on error
+        }
+      });
+  }
 
   get filteredLogs(): ActivityLog[] {
     const query = this.searchText.trim().toLowerCase();
+    
+    // Extra safety: ensure this.logs is iterable
+    const safeLogs = Array.isArray(this.logs) ? this.logs : [];
 
-    return this.logs.filter(log => {
+    return safeLogs.filter(log => {
       const matchesSearch =
         !query ||
-        log.user.toLowerCase().includes(query) ||
-        log.action.toLowerCase().includes(query) ||
-        log.module.toLowerCase().includes(query);
+        (log.user && log.user.toLowerCase().includes(query)) ||
+        (log.action && log.action.toLowerCase().includes(query)) ||
+        (log.module && log.module.toLowerCase().includes(query));
 
       const matchesSeverity =
         this.selectedSeverity === 'All' ||
@@ -100,15 +76,18 @@ export class ActivityLogs {
   }
 
   get successfulCount(): number {
-    return this.logs.filter(log => log.status === 'Success').length;
+    const safeLogs = Array.isArray(this.logs) ? this.logs : [];
+    return safeLogs.filter(log => log.status === 'Success').length;
   }
 
   get warningCount(): number {
-    return this.logs.filter(log => log.severity === 'Warning').length;
+    const safeLogs = Array.isArray(this.logs) ? this.logs : [];
+    return safeLogs.filter(log => log.severity === 'Warning').length;
   }
 
   get criticalCount(): number {
-    return this.logs.filter(log => log.severity === 'Critical').length;
+    const safeLogs = Array.isArray(this.logs) ? this.logs : [];
+    return safeLogs.filter(log => log.severity === 'Critical').length;
   }
 
   clearFilters(): void {
@@ -118,13 +97,19 @@ export class ActivityLogs {
   }
 
   exportCsv(): void {
+    const safeLogs = Array.isArray(this.logs) ? this.logs : [];
+    if (safeLogs.length === 0) {
+      alert("No data to export!");
+      return;
+    }
+
     const headers = [
       'Timestamp', 'User', 'Action',
       'Module', 'Severity', 'Status'
     ];
 
     const escapeCsv = (value: string) =>
-      '"' + value.replace(/"/g, '""') + '"';
+      '"' + (value || '').replace(/"/g, '""') + '"';
 
     const rows = this.filteredLogs.map(log => [
       log.timestamp,

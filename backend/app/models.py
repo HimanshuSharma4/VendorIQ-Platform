@@ -1,4 +1,3 @@
-
 from sqlalchemy import (
     Column,
     Integer,
@@ -12,9 +11,9 @@ from sqlalchemy import (
 )
 from sqlalchemy.orm import relationship
 from sqlalchemy.sql import func
+from sqlalchemy import JSON
 
 from .database import Base
-from sqlalchemy import JSON
 
 
 # =========================
@@ -242,37 +241,6 @@ class VendorPerformance(Base):
 
 
 # =========================
-# ACTIVITY LOG MODEL
-# =========================
-class ActivityLog(Base):
-    __tablename__ = "activity_logs"
-
-    log_id = Column(Integer, primary_key=True, index=True)
-
-    timestamp = Column(
-        DateTime(timezone=True),
-        nullable=False,
-        server_default=func.now(),
-        index=True,
-    )
-
-    user_id = Column(
-        Integer,
-        ForeignKey("users.user_id"),
-        nullable=True,
-    )
-    user_name = Column(String, nullable=False, default="System")
-
-    action = Column(String, nullable=False)
-    module = Column(String, nullable=False)
-
-    severity = Column(String, nullable=False, default="Info")
-    status = Column(String, nullable=False, default="Success")
-
-    details = Column(Text, nullable=True)
-    ip_address = Column(String, nullable=True)
-
-# =========================
 # PROCUREMENT MODEL
 # =========================
 class Procurement(Base):
@@ -283,6 +251,7 @@ class Procurement(Base):
     vendor_name = Column(String, index=True)
     amount = Column(Float)
     status = Column(String, default="Pending")
+
 
 # =========================
 # ROLE & PERMISSION MODEL
@@ -296,4 +265,19 @@ class Role(Base):
     users = Column(Integer, default=0)
     level = Column(String, default="Custom")
     color = Column(String, default="blue")
-    permissions = Column(JSON, default=dict) # JSON format me permissions save hongi
+    permissions = Column(JSON, default=dict)
+
+
+# =========================
+# ACTIVITY LOGS MODEL
+# =========================
+class ActivityLog(Base):
+    __tablename__ = "system_activity_logs"
+
+    id = Column(Integer, primary_key=True, index=True)
+    timestamp = Column(String)
+    user = Column(String)
+    action = Column(String)
+    module = Column(String)
+    severity = Column(String) # Info, Warning, Critical
+    status = Column(String) # Success, Failed

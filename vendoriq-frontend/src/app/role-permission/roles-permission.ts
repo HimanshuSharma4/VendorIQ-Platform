@@ -29,7 +29,6 @@ export class RolesPermissionComponent implements OnInit {
   newRoleDescription = '';
   roles: Role[] = [];
   
-  // Real-time API counts store karne ke liye
   userCountsByRole: { [roleName: string]: number } = {};
 
   modules = [
@@ -46,7 +45,7 @@ export class RolesPermissionComponent implements OnInit {
 
   ngOnInit(): void {
     this.fetchRoles();
-    this.fetchUserCounts(); // Fetch real user counts
+    this.fetchUserCounts();
   }
 
   private getHeaders() {
@@ -75,7 +74,6 @@ export class RolesPermissionComponent implements OnInit {
       });
   }
 
-  // NAYI API CALL: Users table se live counting ke liye
   fetchUserCounts(): void {
     this.http.get<any[]>('http://127.0.0.1:8000/users', { headers: this.getHeaders() }).subscribe({
       next: (users) => {
@@ -103,7 +101,6 @@ export class RolesPermissionComponent implements OnInit {
     return this.roles.find(role => role.id === this.selectedRoleId) ?? this.roles[0];
   }
 
-  // Ye bhi live counts ka sum dega summary card ke liye
   get totalAssignedUsers(): number {
     return Object.values(this.userCountsByRole).reduce((total, count) => total + count, 0);
   }
@@ -128,6 +125,7 @@ export class RolesPermissionComponent implements OnInit {
 
     this.http.put(`http://127.0.0.1:8000/roles/${this.selectedRole.id}`, this.selectedRole, { headers: this.getHeaders() })
       .subscribe({
+        next: () => this.logActivity(`Changed permissions for role: ${this.selectedRole.name}`),
         error: (err) => console.error('Error updating permissions', err)
       });
   }
@@ -147,6 +145,26 @@ export class RolesPermissionComponent implements OnInit {
     this.showRoleForm = true;
   }
 
+  // --- NAYA FUNCTION: Activity chupchap database me save karne ke liye ---
+  logActivity(actionMessage: string, logSeverity: string = 'Info', logStatus: string = 'Success') {
+    const token = localStorage.getItem('access_token');
+    const headers = new HttpHeaders({ 'Authorization': `Bearer ${token}` });
+    
+    const logData = {
+      timestamp: new Date().toISOString().replace('T', ' ').substring(0, 19), 
+      user: localStorage.getItem('name') || 'Admin',
+      action: actionMessage,
+      module: 'Role & Permission',
+      severity: logSeverity,
+      status: logStatus
+    };
+
+    this.http.post('http://127.0.0.1:8000/activity-logs', logData, { headers }).subscribe({
+      error: (err) => console.error('Activity log error:', err)
+    });
+  }
+
+  // --- UPDATED saveRole FUNCTION ---
   saveRole(): void {
     const name = this.newRoleName.trim();
     if (!name) { alert('Please enter a role name.'); return; }
@@ -161,16 +179,25 @@ export class RolesPermissionComponent implements OnInit {
       const existingRole = this.roles.find(r => r.id === this.editingRoleId);
       rolePayload = { ...existingRole, ...rolePayload };
       this.http.put(`http://127.0.0.1:8000/roles/${this.editingRoleId}`, rolePayload, { headers: this.getHeaders() })
-        .subscribe(() => { this.fetchRoles(); this.showRoleForm = false; });
+        .subscribe(() => { 
+          this.fetchRoles(); 
+          this.showRoleForm = false; 
+          this.logActivity(`Updated role: ${name}`); // LOG
+        });
     } else {
       rolePayload = {
         ...rolePayload, users: 0, level: 'Custom', color: 'blue', permissions: {}
       };
       this.http.post('http://127.0.0.1:8000/roles', rolePayload, { headers: this.getHeaders() })
-        .subscribe(() => { this.fetchRoles(); this.showRoleForm = false; });
+        .subscribe(() => { 
+          this.fetchRoles(); 
+          this.showRoleForm = false; 
+          this.logActivity(`Created new role: ${name}`, 'Info', 'Success'); // LOG
+        });
     }
   }
 
+  // --- UPDATED deleteRole FUNCTION ---
   deleteRole(role: Role): void {
     if (role.id === 1) { alert('The Super Administrator role cannot be deleted.'); return; }
     if (!confirm(`Delete the role "${role.name}"?`)) return;
@@ -179,6 +206,7 @@ export class RolesPermissionComponent implements OnInit {
       .subscribe(() => {
         this.selectedRoleId = 1;
         this.fetchRoles();
+        this.logActivity(`Deleted role: ${role.name}`, 'Critical', 'Success'); // LOG
       });
   }
 }

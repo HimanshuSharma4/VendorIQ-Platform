@@ -33,7 +33,6 @@ import { MatSelectModule } from '@angular/material/select';
         </mat-form-field>
       </div>
 
-      <!-- Password field is hidden in Edit mode for security -->
       <mat-form-field appearance="outline" *ngIf="!isEditMode">
         <mat-label>Password</mat-label>
         <input matInput type="password" [(ngModel)]="userData.password" required>
@@ -43,7 +42,6 @@ import { MatSelectModule } from '@angular/material/select';
         <mat-form-field appearance="outline" style="flex: 1;">
           <mat-label>Role</mat-label>
           <mat-select [(ngModel)]="userData.role" required>
-            <!-- DYNAMIC ROLES DROPDOWN (Database se aayega) -->
             <mat-option *ngFor="let role of availableRoles" [value]="role.name">
               {{ role.name }}
             </mat-option>
@@ -77,7 +75,7 @@ export class UserDialog implements OnInit {
     status: 'Active'
   };
   isEditMode = false;
-  availableRoles: any[] = []; // Parent se roles yahan aayenge
+  availableRoles: any[] = []; 
 
   constructor(
     private dialogRef: MatDialogRef<UserDialog>, 
@@ -92,12 +90,26 @@ export class UserDialog implements OnInit {
       this.userData = { ...data.user };
       this.isEditMode = true;
     } else if (this.availableRoles.length > 0) {
-      // Naya user banate time pehla role by default select kar do
       this.userData.role = this.availableRoles[0].name;
     }
   }
 
   ngOnInit() {}
+
+  // ACTIVITY LOGGER FOR USER DIALOG
+  logActivity(actionMessage: string, logSeverity: string = 'Info', logStatus: string = 'Success') {
+    const token = localStorage.getItem('access_token');
+    const headers = new HttpHeaders({ 'Authorization': `Bearer ${token}` });
+    const logData = {
+      timestamp: new Date().toISOString().replace('T', ' ').substring(0, 19),
+      user: localStorage.getItem('name') || 'Admin',
+      action: actionMessage,
+      module: 'User Management',
+      severity: logSeverity,
+      status: logStatus
+    };
+    this.http.post('http://127.0.0.1:8000/activity-logs', logData, { headers }).subscribe();
+  }
 
   saveUser() {
     if (!this.userData.name || !this.userData.email || !this.userData.role) {
@@ -114,12 +126,18 @@ export class UserDialog implements OnInit {
 
     if (this.isEditMode) {
       this.http.put(`http://127.0.0.1:8000/users/${this.userData.user_id}`, this.userData, { headers }).subscribe({
-        next: () => this.dialogRef.close(true),
+        next: () => {
+          this.logActivity(`Updated user profile: ${this.userData.name}`); // LOG HERE
+          this.dialogRef.close(true);
+        },
         error: (err) => alert('Error updating user')
       });
     } else {
       this.http.post('http://127.0.0.1:8000/users', this.userData, { headers }).subscribe({
-        next: () => this.dialogRef.close(true),
+        next: () => {
+          this.logActivity(`Created new system user: ${this.userData.name}`, 'Info', 'Success'); // LOG HERE
+          this.dialogRef.close(true);
+        },
         error: (err) => alert('Error saving user')
       });
     }
@@ -185,7 +203,7 @@ export class UserDialog implements OnInit {
             <th mat-header-cell *matHeaderCellDef style="text-align: right;"> Actions </th>
             <td mat-cell *matCellDef="let element" style="text-align: right;">
               <button mat-button color="primary" (click)="openUserDialog(element)" style="min-width: 36px; padding: 0;">✏️</button>
-              <button mat-button color="warn" (click)="deleteUser(element.user_id)" style="min-width: 36px; padding: 0;">🗑️</button>
+              <button mat-button color="warn" (click)="deleteUser(element)" style="min-width: 36px; padding: 0;">🗑️</button>
             </td>
           </ng-container>
 
@@ -201,16 +219,30 @@ export class UserManagement implements OnInit {
     'user_id', 'name', 'email', 'role', 'status', 'created_at', 'actions'
   ];
   dataSource = new MatTableDataSource<any>([]);
-  availableRoles: any[] = []; // Naya array database roles store karne ke liye
+  availableRoles: any[] = []; 
 
   constructor(private http: HttpClient, private dialog: MatDialog) {}
 
   ngOnInit(): void {
-    this.fetchRoles(); // Page load hote hi roles fetch karo
+    this.fetchRoles(); 
     this.fetchUsers();
   }
 
-  // API Call: Real roles mangwane ke liye
+  // ACTIVITY LOGGER FOR MAIN COMPONENT
+  logActivity(actionMessage: string, logSeverity: string = 'Info', logStatus: string = 'Success') {
+    const token = localStorage.getItem('access_token');
+    const headers = new HttpHeaders({ 'Authorization': `Bearer ${token}` });
+    const logData = {
+      timestamp: new Date().toISOString().replace('T', ' ').substring(0, 19),
+      user: localStorage.getItem('name') || 'Admin',
+      action: actionMessage,
+      module: 'User Management',
+      severity: logSeverity,
+      status: logStatus
+    };
+    this.http.post('http://127.0.0.1:8000/activity-logs', logData, { headers }).subscribe();
+  }
+
   fetchRoles(): void {
     const token = localStorage.getItem('access_token');
     const headers = new HttpHeaders({ 'Authorization': `Bearer ${token}` });
@@ -233,7 +265,6 @@ export class UserManagement implements OnInit {
   openUserDialog(user?: any): void {
     const dialogRef = this.dialog.open(UserDialog, { 
       width: '600px',
-      // User ke sath-sath live roles bhi form me bhej rahe hain
       data: { user: user, roles: this.availableRoles } 
     });
     dialogRef.afterClosed().subscribe(result => {
@@ -241,13 +272,16 @@ export class UserManagement implements OnInit {
     });
   }
 
-  deleteUser(id: number): void {
-    if (confirm('Are you sure you want to delete this user?')) {
+  deleteUser(user: any): void {
+    if (confirm(`Are you sure you want to delete user "${user.name}"?`)) {
       const token = localStorage.getItem('access_token');
       const headers = new HttpHeaders({ 'Authorization': `Bearer ${token}` });
 
-      this.http.delete(`http://127.0.0.1:8000/users/${id}`, { headers }).subscribe({
-        next: () => this.fetchUsers(),
+      this.http.delete(`http://127.0.0.1:8000/users/${user.user_id}`, { headers }).subscribe({
+        next: () => {
+          this.logActivity(`Deleted user account: ${user.name}`, 'Critical', 'Success'); // LOG HERE
+          this.fetchUsers();
+        },
         error: (err) => alert('Error deleting user')
       });
     }

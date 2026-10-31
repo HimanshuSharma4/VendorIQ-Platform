@@ -277,3 +277,23 @@ class RoleResponse(RoleBase):
 
     class Config:
         from_attributes = True
+
+# ==========================================
+# ACTIVITY LOGS SCHEMAS
+# ==========================================
+class ActivityLogBase(BaseModel):
+    timestamp: str
+    user: str
+    action: str
+    module: str
+    severity: str
+    status: str
+
+class ActivityLogCreate(ActivityLogBase):
+    pass
+
+class ActivityLogResponse(ActivityLogBase):
+    id: int
+
+    class Config:
+        from_attributes = True

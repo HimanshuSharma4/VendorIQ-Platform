@@ -936,3 +936,19 @@ def delete_role(role_id: int, db: Session = Depends(get_db)):
     db.delete(db_role)
     db.commit()
     return {"message": "Role deleted successfully"}
+
+# ==========================================
+# 16. ACTIVITY LOGS API
+# ==========================================
+@app.get("/activity-logs", response_model=List[schemas.ActivityLogResponse])
+def get_activity_logs(db: Session = Depends(get_db)):
+    # .desc() lagaya hai taaki sabse naye logs sabse upar aayein
+    return db.query(models.ActivityLog).order_by(models.ActivityLog.id.desc()).all()
+
+@app.post("/activity-logs", response_model=schemas.ActivityLogResponse)
+def create_activity_log(log: schemas.ActivityLogCreate, db: Session = Depends(get_db)):
+    db_log = models.ActivityLog(**log.model_dump())
+    db.add(db_log)
+    db.commit()
+    db.refresh(db_log)
+    return db_log
