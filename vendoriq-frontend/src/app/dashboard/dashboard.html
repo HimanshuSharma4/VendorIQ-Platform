@@ -1,33 +1,105 @@
 <div style="padding: 24px;">
   <!-- Header -->
-  <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 30px;">
-    <div>
-      <h2 style="margin: 0;">Dashboard Analytics</h2>
-      <p style="margin-top: 5px; color: gray;">Real-time platform overview and system statistics.</p>
-    </div>
+  <div style="margin-bottom: 20px;">
+    <h2 style="margin: 0; font-size: 24px;">System Analytics & Control Center</h2>
+    <p style="margin-top: 5px; color: gray;">Comprehensive overview of Procurement, Vendors, and Admin activities.</p>
   </div>
 
-  <!-- Dashboard Summary Cards (Connected to Backend) -->
-  <div style="display: flex; gap: 20px; margin-bottom: 30px;">
-    <div style="flex: 1; background: white; padding: 20px; border-radius: 8px; box-shadow: 0 2px 4px rgba(0,0,0,0.05); border-left: 5px solid #3f51b5;">
-      <p style="margin: 0; color: #666; font-size: 14px;">Total Vendors</p>
-      <h2 style="margin: 10px 0 0; font-size: 28px; color: #333;">{{ stats.total_vendors }}</h2>
-    </div>
+  <mat-tab-group animationDuration="0ms" class="custom-tabs">
     
-    <div style="flex: 1; background: white; padding: 20px; border-radius: 8px; box-shadow: 0 2px 4px rgba(0,0,0,0.05); border-left: 5px solid #4caf50;">
-      <p style="margin: 0; color: #666; font-size: 14px;">Active Vendors</p>
-      <h2 style="margin: 10px 0 0; font-size: 28px; color: #333;">{{ stats.active_vendors }}</h2>
-    </div>
-    
-    <div style="flex: 1; background: white; padding: 20px; border-radius: 8px; box-shadow: 0 2px 4px rgba(0,0,0,0.05); border-left: 5px solid #ff9800;">
-      <p style="margin: 0; color: #666; font-size: 14px;">Total Purchase Orders</p>
-      <h2 style="margin: 10px 0 0; font-size: 28px; color: #333;">{{ stats.total_purchase_orders }}</h2>
-    </div>
-    
-    <div style="flex: 1; background: white; padding: 20px; border-radius: 8px; box-shadow: 0 2px 4px rgba(0,0,0,0.05); border-left: 5px solid #f44336;">
-      <p style="margin: 0; color: #666; font-size: 14px;">Approved Spend</p>
-      <!-- Yahan name fix kiya aur comma add karne ke liye number pipe lagaya -->
-      <h2 style="margin: 10px 0 0; font-size: 28px; color: #333;">₹{{ stats.approved_spend | number }}</h2>
-    </div>
-  </div>
+    <!-- 1. ADMIN DASHBOARD TAB (Sirf Admin ko dikhega) -->
+    <mat-tab label="Admin Dashboard" *ngIf="userRole === 'Admin'">
+      <div style="padding: 20px 0;">
+        <h3 style="color: #3f51b5; margin-bottom: 20px;">System Statistics & Overview</h3>
+        <div style="display: flex; gap: 20px; flex-wrap: wrap;">
+          <div class="stat-card">
+            <p>Total Registered Vendors</p>
+            <h2>{{ stats.total_vendors }}</h2>
+          </div>
+          <div class="stat-card">
+            <p>Active Vendors</p>
+            <h2 style="color: #4caf50;">{{ stats.active_vendors }}</h2>
+          </div>
+          <div class="stat-card">
+            <p>Total Purchase Orders</p>
+            <h2>{{ stats.total_purchase_orders }}</h2>
+          </div>
+          <div class="stat-card">
+            <p>System Approved Spend</p>
+            <h2 style="color: #f44336;">₹{{ stats.approved_spend | number }}</h2>
+          </div>
+        </div>
+      </div>
+    </mat-tab>
+
+    <!-- 2. PROCUREMENT DASHBOARD TAB (Admin aur Manager ko dikhega) -->
+    <mat-tab label="Procurement Dashboard" *ngIf="userRole === 'Admin' || userRole === 'Procurement Manager'">
+      <div style="padding: 20px 0;">
+        <h3 style="color: #3f51b5; margin-bottom: 20px;">Active Orders & Cost Analysis</h3>
+        
+        <table mat-table [dataSource]="recentPOs" class="mat-elevation-z8" style="width: 100%;">
+          <ng-container matColumnDef="po_id">
+            <th mat-header-cell *matHeaderCellDef> PO ID </th>
+            <td mat-cell *matCellDef="let element"> {{element.po_id}} </td>
+          </ng-container>
+
+          <ng-container matColumnDef="vendor">
+            <th mat-header-cell *matHeaderCellDef> Vendor </th>
+            <td mat-cell *matCellDef="let element"> <strong>{{element.vendor}}</strong> </td>
+          </ng-container>
+
+          <ng-container matColumnDef="amount">
+            <th mat-header-cell *matHeaderCellDef> Cost Analysis </th>
+            <td mat-cell *matCellDef="let element"> ₹{{element.amount | number}} </td>
+          </ng-container>
+
+          <ng-container matColumnDef="status">
+            <th mat-header-cell *matHeaderCellDef> Approval Status </th>
+            <td mat-cell *matCellDef="let element"> <span style="color: green;">{{element.status}}</span> </td>
+          </ng-container>
+
+          <ng-container matColumnDef="delivery">
+            <th mat-header-cell *matHeaderCellDef> Delivery Status </th>
+            <td mat-cell *matCellDef="let element"> {{element.delivery}} </td>
+          </ng-container>
+
+          <tr mat-header-row *matHeaderRowDef="poColumns"></tr>
+          <tr mat-row *matRowDef="let row; columns: poColumns;"></tr>
+        </table>
+      </div>
+    </mat-tab>
+
+    <!-- 3. VENDOR DASHBOARD TAB (Admin aur Vendor ko dikhega) -->
+    <mat-tab label="Vendor Dashboard" *ngIf="userRole === 'Admin' || userRole === 'Vendor'">
+      <div style="padding: 20px 0;">
+        <h3 style="color: #3f51b5; margin-bottom: 20px;">Vendor Performance & Reliability Score</h3>
+        
+        <table mat-table [dataSource]="vendorPerformance" class="mat-elevation-z8" style="width: 100%;">
+          <ng-container matColumnDef="name">
+            <th mat-header-cell *matHeaderCellDef> Vendor Name </th>
+            <td mat-cell *matCellDef="let element"> <strong>{{element.name}}</strong> </td>
+          </ng-container>
+
+          <ng-container matColumnDef="score">
+            <th mat-header-cell *matHeaderCellDef> Reliability Score </th>
+            <td mat-cell *matCellDef="let element"> {{element.score}} / 100 </td>
+          </ng-container>
+
+          <ng-container matColumnDef="quality">
+            <th mat-header-cell *matHeaderCellDef> Quality Rating </th>
+            <td mat-cell *matCellDef="let element"> {{element.quality}} / 100 </td>
+          </ng-container>
+
+          <ng-container matColumnDef="risk">
+            <th mat-header-cell *matHeaderCellDef> Risk Level </th>
+            <td mat-cell *matCellDef="let element" [ngStyle]="getRiskStyle(element.risk)"> {{element.risk}} </td>
+          </ng-container>
+
+          <tr mat-header-row *matHeaderRowDef="vendorColumns"></tr>
+          <tr mat-row *matRowDef="let row; columns: vendorColumns;"></tr>
+        </table>
+      </div>
+    </mat-tab>
+
+  </mat-tab-group>
 </div>

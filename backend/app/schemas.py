@@ -1,6 +1,6 @@
 from pydantic import BaseModel, EmailStr
 from datetime import date, datetime
-from typing import Optional, List
+from typing import Optional, List, Dict
 
 # ==========================================
 # USERS & AUTH SCHEMAS
@@ -237,5 +237,43 @@ class VendorPerformanceCreate(VendorPerformanceBase):
 
 class VendorPerformanceResponse(VendorPerformanceBase):
     performance_id: int
+    class Config:
+        from_attributes = True
+
+# ==========================================
+# PROCUREMENT SCHEMAS
+# ==========================================
+class ProcurementBase(BaseModel):
+    description: str
+    vendor_name: str
+    amount: float
+    status: str = "Pending"
+
+class ProcurementCreate(ProcurementBase):
+    pass
+
+class ProcurementResponse(ProcurementBase):
+    id: int
+
+    class Config:
+        from_attributes = True
+
+# ==========================================
+# ROLES & PERMISSIONS SCHEMAS
+# ==========================================
+class RoleBase(BaseModel):
+    name: str
+    description: str
+    users: int = 0
+    level: str = "Custom"
+    color: str = "blue"
+    permissions: Dict[str, List[str]] = {}
+
+class RoleCreate(RoleBase):
+    pass
+
+class RoleResponse(RoleBase):
+    id: int
+
     class Config:
         from_attributes = True

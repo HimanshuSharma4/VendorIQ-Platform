@@ -1,7 +1,7 @@
-
-import { Component } from '@angular/core';
+import { Component, OnInit, ChangeDetectorRef } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
+import { HttpClient, HttpHeaders, HttpClientModule } from '@angular/common/http';
 
 interface Role {
   id: number;
@@ -16,181 +16,83 @@ interface Role {
 @Component({
   selector: 'app-roles-permission',
   standalone: true,
-  imports: [CommonModule, FormsModule],
+  imports: [CommonModule, FormsModule, HttpClientModule],
   templateUrl: './roles-permission.html',
   styleUrl: './roles-permission.css'
 })
-export class RolesPermissionComponent {
-  private readonly storageKey = 'vendoriq-role-permissions-v1';
-
+export class RolesPermissionComponent implements OnInit {
   searchTerm = '';
   selectedRoleId = 1;
   showRoleForm = false;
   editingRoleId: number | null = null;
   newRoleName = '';
   newRoleDescription = '';
+  roles: Role[] = [];
+  
+  // Real-time API counts store karne ke liye
+  userCountsByRole: { [roleName: string]: number } = {};
 
   modules = [
-    'Dashboard',
-    'User Management',
-    'Vendors',
-    'Products',
-    'Procurement',
-    'Purchase Orders',
-    'Deliveries',
-    'Invoices & Payments',
-    'Quality Inspection',
-    'Communications',
-    'Contracts & Compliance',
-    'Performance & Reliability',
-    'Reports & Analytics',
-    'Notifications',
-    'System / Activity Logs',
-    'Role & Permission',
-    'System Settings'
+    'Dashboard', 'User Management', 'Vendors', 'Products', 'Procurement',
+    'Purchase Orders', 'Deliveries', 'Invoices & Payments', 'Quality Inspection',
+    'Communications', 'Contracts & Compliance', 'Performance & Reliability',
+    'Reports & Analytics', 'Notifications', 'System / Activity Logs',
+    'Role & Permission', 'System Settings'
   ];
 
   actions = ['View', 'Create', 'Edit', 'Delete'];
 
-  private createDefaultRoles(): Role[] {
-    const definitions = [
-      {
-        id: 1,
-        name: 'Super Administrator',
-        description: 'Full platform access and administration',
-        users: 1,
-        level: 'Critical',
-        color: 'purple'
-      },
-      {
-        id: 2,
-        name: 'Procurement Manager',
-        description: 'Manages purchasing and vendor relationships',
-        users: 4,
-        level: 'High',
-        color: 'blue'
-      },
-      {
-        id: 3,
-        name: 'Finance Manager',
-        description: 'Manages invoices, payments and budgets',
-        users: 3,
-        level: 'High',
-        color: 'green'
-      },
-      {
-        id: 4,
-        name: 'Auditor',
-        description: 'Reviews compliance and platform activity',
-        users: 2,
-        level: 'Medium',
-        color: 'orange'
-      },
-      {
-        id: 5,
-        name: 'Supply Chain Manager',
-        description: 'Monitors deliveries, inventory and suppliers',
-        users: 5,
-        level: 'High',
-        color: 'cyan'
-      }
-    ];
+  constructor(private http: HttpClient, private cdr: ChangeDetectorRef) {}
 
-    return definitions.map(definition => {
-      const permissions: { [module: string]: string[] } = {};
+  ngOnInit(): void {
+    this.fetchRoles();
+    this.fetchUserCounts(); // Fetch real user counts
+  }
 
-      this.modules.forEach(module => {
-        permissions[module] = definition.id === 1
-          ? [...this.actions]
-          : ['View'];
+  private getHeaders() {
+    const token = localStorage.getItem('access_token');
+    return new HttpHeaders({ 'Authorization': `Bearer ${token}` });
+  }
+
+  fetchRoles(): void {
+    this.http.get<Role[]>('http://127.0.0.1:8000/roles', { headers: this.getHeaders() })
+      .subscribe({
+        next: (data) => {
+          if (data && data.length > 0) {
+            this.roles = data;
+          } else {
+            this.roles = [{
+              id: 1, name: 'Super Administrator', description: 'Full access', users: 1,
+              level: 'Critical', color: 'purple', permissions: {}
+            }];
+          }
+          if (!this.roles.some(r => r.id === this.selectedRoleId)) {
+            this.selectedRoleId = this.roles[0]?.id || 1;
+          }
+          this.cdr.detectChanges(); 
+        },
+        error: (err) => console.error('Error fetching roles:', err)
       });
-
-      return { ...definition, permissions };
-    });
   }
 
-  roles: Role[] = this.createDefaultRoles();
-
-  constructor() {
-    this.loadRoles();
-  }
-
-  private loadRoles(): void {
-    try {
-      const saved = localStorage.getItem(this.storageKey);
-
-      if (!saved) {
-        this.persistRoles();
-        return;
-      }
-
-      const parsed: unknown = JSON.parse(saved);
-
-      if (!Array.isArray(parsed)) {
-        this.persistRoles();
-        return;
-      }
-
-      const validRoles = parsed.filter((role: any) =>
-        role &&
-        Number.isInteger(role.id) &&
-        typeof role.name === 'string' &&
-        typeof role.description === 'string' &&
-        role.permissions &&
-        typeof role.permissions === 'object'
-      ) as Role[];
-
-      if (!validRoles.some(role => role.id === 1)) {
-        this.roles = this.createDefaultRoles();
-        this.persistRoles();
-        return;
-      }
-
-      this.roles = validRoles.map(role => {
-        const permissions: { [module: string]: string[] } = {};
-
-        this.modules.forEach(module => {
-          const savedActions = role.permissions[module];
-
-          permissions[module] = Array.isArray(savedActions)
-            ? savedActions.filter(action => this.actions.includes(action))
-            : [];
+  // NAYI API CALL: Users table se live counting ke liye
+  fetchUserCounts(): void {
+    this.http.get<any[]>('http://127.0.0.1:8000/users', { headers: this.getHeaders() }).subscribe({
+      next: (users) => {
+        this.userCountsByRole = {};
+        users.forEach(user => {
+          if (user.role) {
+            this.userCountsByRole[user.role] = (this.userCountsByRole[user.role] || 0) + 1;
+          }
         });
-
-        // The built-in administrator role always has all demo permissions.
-        if (role.id === 1) {
-          this.modules.forEach(module => {
-            permissions[module] = [...this.actions];
-          });
-        }
-
-        return {
-          ...role,
-          users: Number.isFinite(role.users) ? role.users : 0,
-          permissions
-        };
-      });
-
-      if (!this.roles.some(role => role.id === this.selectedRoleId)) {
-        this.selectedRoleId = this.roles[0]?.id ?? 1;
-      }
-    } catch {
-      // If stored data cannot be read, use the default roles.
-      this.roles = this.createDefaultRoles();
-    }
-  }
-
-  private persistRoles(): void {
-    try {
-      localStorage.setItem(this.storageKey, JSON.stringify(this.roles));
-    } catch {
-      alert('Could not save changes in browser storage.');
-    }
+        this.cdr.detectChanges();
+      },
+      error: (err) => console.error('Error fetching users for count:', err)
+    });
   }
 
   get filteredRoles(): Role[] {
     const term = this.searchTerm.toLowerCase().trim();
-
     return this.roles.filter(role =>
       role.name.toLowerCase().includes(term) ||
       role.description.toLowerCase().includes(term)
@@ -198,39 +100,36 @@ export class RolesPermissionComponent {
   }
 
   get selectedRole(): Role {
-    return this.roles.find(role => role.id === this.selectedRoleId)
-      ?? this.roles[0];
+    return this.roles.find(role => role.id === this.selectedRoleId) ?? this.roles[0];
   }
 
+  // Ye bhi live counts ka sum dega summary card ke liye
   get totalAssignedUsers(): number {
-    return this.roles.reduce((total, role) => total + role.users, 0);
+    return Object.values(this.userCountsByRole).reduce((total, count) => total + count, 0);
   }
 
   get permissionCount(): number {
-    if (!this.selectedRole) {
-      return 0;
-    }
-
-    return this.modules.reduce((total, module) =>
+    if (!this.selectedRole || !this.selectedRole.permissions) return 0;
+    return this.modules.reduce((total, module) => 
       total + (this.selectedRole.permissions[module]?.length ?? 0), 0);
   }
 
   hasPermission(module: string, action: string): boolean {
-    return this.selectedRole?.permissions[module]?.includes(action) ?? false;
+    return this.selectedRole?.permissions?.[module]?.includes(action) ?? false;
   }
 
   togglePermission(module: string, action: string, checked: boolean): void {
-    if (!this.selectedRole || this.selectedRole.id === 1) {
-      return;
-    }
+    if (!this.selectedRole || this.selectedRole.id === 1) return; 
 
     const permissions = this.selectedRole.permissions[module] ?? [];
-
     this.selectedRole.permissions[module] = checked
       ? [...new Set([...permissions, action])]
       : permissions.filter(item => item !== action);
 
-    this.persistRoles();
+    this.http.put(`http://127.0.0.1:8000/roles/${this.selectedRole.id}`, this.selectedRole, { headers: this.getHeaders() })
+      .subscribe({
+        error: (err) => console.error('Error updating permissions', err)
+      });
   }
 
   openCreateRole(): void {
@@ -241,10 +140,7 @@ export class RolesPermissionComponent {
   }
 
   openEditRole(role: Role): void {
-    if (role.id === 1) {
-      return;
-    }
-
+    if (role.id === 1) return;
     this.editingRoleId = role.id;
     this.newRoleName = role.name;
     this.newRoleDescription = role.description;
@@ -253,70 +149,36 @@ export class RolesPermissionComponent {
 
   saveRole(): void {
     const name = this.newRoleName.trim();
+    if (!name) { alert('Please enter a role name.'); return; }
 
-    if (!name) {
-      alert('Please enter a role name.');
-      return;
-    }
+    const isEdit = this.editingRoleId !== null;
+    let rolePayload: any = {
+      name,
+      description: this.newRoleDescription.trim(),
+    };
 
-    const duplicate = this.roles.some(role =>
-      role.name.toLowerCase() === name.toLowerCase() &&
-      role.id !== this.editingRoleId
-    );
-
-    if (duplicate) {
-      alert('A role with this name already exists.');
-      return;
-    }
-
-    if (this.editingRoleId !== null) {
-      const role = this.roles.find(item => item.id === this.editingRoleId);
-
-      if (role) {
-        role.name = name;
-        role.description = this.newRoleDescription.trim();
-      }
+    if (isEdit) {
+      const existingRole = this.roles.find(r => r.id === this.editingRoleId);
+      rolePayload = { ...existingRole, ...rolePayload };
+      this.http.put(`http://127.0.0.1:8000/roles/${this.editingRoleId}`, rolePayload, { headers: this.getHeaders() })
+        .subscribe(() => { this.fetchRoles(); this.showRoleForm = false; });
     } else {
-      const permissions: { [module: string]: string[] } = {};
-
-      this.modules.forEach(module => {
-        permissions[module] = [];
-      });
-
-      const role: Role = {
-        id: Math.max(0, ...this.roles.map(item => item.id)) + 1,
-        name,
-        description: this.newRoleDescription.trim(),
-        users: 0,
-        level: 'Custom',
-        color: 'blue',
-        permissions
+      rolePayload = {
+        ...rolePayload, users: 0, level: 'Custom', color: 'blue', permissions: {}
       };
-
-      this.roles.push(role);
-      this.selectedRoleId = role.id;
+      this.http.post('http://127.0.0.1:8000/roles', rolePayload, { headers: this.getHeaders() })
+        .subscribe(() => { this.fetchRoles(); this.showRoleForm = false; });
     }
-
-    this.persistRoles();
-    this.showRoleForm = false;
   }
 
   deleteRole(role: Role): void {
-    if (role.id === 1) {
-      alert('The Super Administrator role cannot be deleted.');
-      return;
-    }
+    if (role.id === 1) { alert('The Super Administrator role cannot be deleted.'); return; }
+    if (!confirm(`Delete the role "${role.name}"?`)) return;
 
-    if (!confirm(`Delete the role "${role.name}"?`)) {
-      return;
-    }
-
-    this.roles = this.roles.filter(item => item.id !== role.id);
-
-    if (this.selectedRoleId === role.id) {
-      this.selectedRoleId = this.roles[0]?.id ?? 1;
-    }
-
-    this.persistRoles();
+    this.http.delete(`http://127.0.0.1:8000/roles/${role.id}`, { headers: this.getHeaders() })
+      .subscribe(() => {
+        this.selectedRoleId = 1;
+        this.fetchRoles();
+      });
   }
 }

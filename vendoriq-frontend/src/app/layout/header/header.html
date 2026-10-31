@@ -1,6 +1,6 @@
 <div class="header-container">
   <div class="page-title">
-    <h2>Welcome back, Admin! 👋</h2>
+    <h2>Welcome back, {{ userName.split(' ')[0] }}! 👋</h2>
     <p>Here's the overall platform overview and system statistics.</p>
   </div>
 
@@ -11,12 +11,14 @@
     </div>
     <div class="icon-btn">🔔</div>
     <div class="icon-btn">📧</div>
-    <div class="date-display">📅 Sep 21, 2026</div>
+    <!-- Real-time dynamic date -->
+    <div class="date-display">📅 {{ currentDate | date:'MMM d, yyyy' }}</div>
     <div class="user-profile">
-      <div class="avatar">AD</div>
+      <!-- User ke naam ka pehla letter -->
+      <div class="avatar">{{ userName.charAt(0) | uppercase }}</div>
       <div class="user-info">
-        <span class="name">Admin User</span>
-        <span class="role">Super Administrator</span>
+        <span class="name">{{ userName }}</span>
+        <span class="role">{{ userRole }}</span>
       </div>
     </div>
   </div>

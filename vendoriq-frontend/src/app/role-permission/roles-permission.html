@@ -1,4 +1,3 @@
-
 <div class="roles-page">
   <div class="page-heading">
     <div>
@@ -83,7 +82,8 @@
           <div class="role-info">
             <strong>{{ role.name }}</strong>
             <span>{{ role.description }}</span>
-            <small>{{ role.users }} assigned users</small>
+            <!-- HTML UPDATE: Live dictionary se counts fetch honge -->
+            <small>{{ userCountsByRole[role.name] || 0 }} assigned users</small>
           </div>
 
           <span class="role-arrow">›</span>

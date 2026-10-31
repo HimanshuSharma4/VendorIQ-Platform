@@ -14,6 +14,7 @@ from sqlalchemy.orm import relationship
 from sqlalchemy.sql import func
 
 from .database import Base
+from sqlalchemy import JSON
 
 
 # =========================
@@ -270,3 +271,29 @@ class ActivityLog(Base):
 
     details = Column(Text, nullable=True)
     ip_address = Column(String, nullable=True)
+
+# =========================
+# PROCUREMENT MODEL
+# =========================
+class Procurement(Base):
+    __tablename__ = "procurements"
+
+    id = Column(Integer, primary_key=True, index=True)
+    description = Column(String, index=True)
+    vendor_name = Column(String, index=True)
+    amount = Column(Float)
+    status = Column(String, default="Pending")
+
+# =========================
+# ROLE & PERMISSION MODEL
+# =========================
+class Role(Base):
+    __tablename__ = "roles"
+
+    id = Column(Integer, primary_key=True, index=True)
+    name = Column(String, unique=True, index=True, nullable=False)
+    description = Column(String)
+    users = Column(Integer, default=0)
+    level = Column(String, default="Custom")
+    color = Column(String, default="blue")
+    permissions = Column(JSON, default=dict) # JSON format me permissions save hongi

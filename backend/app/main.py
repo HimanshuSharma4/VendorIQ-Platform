@@ -1,4 +1,3 @@
-
 from datetime import datetime
 from typing import List, Optional
 
@@ -16,8 +15,6 @@ from .database import engine, get_db
 # ==========================================
 # DATABASE INITIALIZATION
 # ==========================================
-# Creates missing tables for imported SQLAlchemy models.
-# It does not modify existing table schemas.
 models.Base.metadata.create_all(bind=engine)
 
 
@@ -79,11 +76,19 @@ def login_json(req: LoginRequest, db: Session = Depends(get_db)):
         models.User.email == req.email
     ).first()
 
-    # Preserves the authentication behavior of your current project.
     if not user or user.password != req.password:
         raise HTTPException(status_code=401, detail="Invalid credentials")
 
-    return {"access_token": user.email, "token_type": "bearer"}
+    # Bulletproof approach to avoid 500 Internal Server Errors
+    user_role = getattr(user, 'role', 'Admin')
+    user_name = getattr(user, 'username', getattr(user, 'name', 'Admin User'))
+
+    return {
+        "access_token": user.email, 
+        "token_type": "bearer",
+        "role": user_role,
+        "name": user_name
+    }
 
 
 @app.post("/token")
@@ -747,6 +752,8 @@ def create_activity_log(
             status_code=500,
             detail="Could not create activity log",
         )
+
+
 # ==========================================
 # 12. VENDOR PERFORMANCE & RELIABILITY API
 # ==========================================
@@ -818,3 +825,114 @@ def calculate_vendor_performance(vendor_id: int, db: Session = Depends(get_db)):
 @app.get("/vendor-performance", response_model=List[schemas.VendorPerformanceResponse])
 def get_all_vendor_performances(db: Session = Depends(get_db)):
     return db.query(models.VendorPerformance).all()
+
+# ==========================================
+# 13. PROCUREMENT API
+# ==========================================
+@app.get("/procurements", response_model=List[schemas.ProcurementResponse])
+def get_procurements(db: Session = Depends(get_db)):
+    return db.query(models.Procurement).all()
+
+@app.post("/procurements", response_model=schemas.ProcurementResponse)
+def create_procurement(
+    proc: schemas.ProcurementCreate, 
+    db: Session = Depends(get_db)
+):
+    db_proc = models.Procurement(**proc.model_dump())
+    db.add(db_proc)
+    db.commit()
+    db.refresh(db_proc)
+    return db_proc
+
+# ==========================================
+# 14. CONTRACTS & COMPLIANCE API
+# ==========================================
+@app.get("/contracts", response_model=List[schemas.ContractResponse])
+def get_contracts(db: Session = Depends(get_db)):
+    return db.query(models.Contract).all()
+
+@app.post("/contracts", response_model=schemas.ContractResponse)
+def create_contract(
+    contract: schemas.ContractCreate,
+    db: Session = Depends(get_db)
+):
+    db_contract = models.Contract(**contract.model_dump())
+    db.add(db_contract)
+    db.commit()
+    db.refresh(db_contract)
+    return db_contract
+
+@app.put("/contracts/{contract_id}", response_model=schemas.ContractResponse)
+def update_contract(
+    contract_id: int,
+    contract_data: schemas.ContractCreate,
+    db: Session = Depends(get_db)
+):
+    db_contract = db.query(models.Contract).filter(
+        models.Contract.contract_id == contract_id
+    ).first()
+
+    if not db_contract:
+        raise HTTPException(status_code=404, detail="Contract not found")
+
+    for key, value in contract_data.model_dump(exclude_unset=True).items():
+        setattr(db_contract, key, value)
+
+    db.commit()
+    db.refresh(db_contract)
+    return db_contract
+
+@app.delete("/contracts/{contract_id}")
+def delete_contract(contract_id: int, db: Session = Depends(get_db)):
+    db_contract = db.query(models.Contract).filter(
+        models.Contract.contract_id == contract_id
+    ).first()
+
+    if not db_contract:
+        raise HTTPException(status_code=404, detail="Contract not found")
+
+    db.delete(db_contract)
+    db.commit()
+    return {"message": "Contract deleted successfully"}
+
+# ==========================================
+# 15. ROLES & PERMISSIONS API
+# ==========================================
+@app.get("/roles", response_model=List[schemas.RoleResponse])
+def get_roles(db: Session = Depends(get_db)):
+    return db.query(models.Role).all()
+
+@app.post("/roles", response_model=schemas.RoleResponse)
+def create_role(role: schemas.RoleCreate, db: Session = Depends(get_db)):
+    db_role = models.Role(**role.model_dump())
+    db.add(db_role)
+    db.commit()
+    db.refresh(db_role)
+    return db_role
+
+@app.put("/roles/{role_id}", response_model=schemas.RoleResponse)
+def update_role(
+    role_id: int,
+    role_data: schemas.RoleCreate,
+    db: Session = Depends(get_db)
+):
+    db_role = db.query(models.Role).filter(models.Role.id == role_id).first()
+    if not db_role:
+        raise HTTPException(status_code=404, detail="Role not found")
+        
+    for key, value in role_data.model_dump(exclude_unset=True).items():
+        setattr(db_role, key, value)
+        
+    db.commit()
+    db.refresh(db_role)
+    return db_role
+
+@app.delete("/roles/{role_id}")
+def delete_role(role_id: int, db: Session = Depends(get_db)):
+    db_role = db.query(models.Role).filter(models.Role.id == role_id).first()
+    if not db_role:
+        raise HTTPException(status_code=404, detail="Role not found")
+        
+    db.delete(db_role)
+    db.commit()
+    return {"message": "Role deleted successfully"}

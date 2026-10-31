@@ -22,23 +22,19 @@ export class Login {
     event.preventDefault(); 
     this.errorMessage = '';
 
-    // NAYA: Ab hum URLSearchParams ki jagah sidha JSON object bhej rahe hain
     const body = {
       email: this.email,
       password: this.password
     };
 
-    // Headers set karne ki zaroorat nahi, HttpClient JSON ke liye automatically set kar deta hai
     this.http.post<any>('http://127.0.0.1:8000/users/login', body)
       .subscribe({
         next: (res) => {
-          // Token save karein
           localStorage.setItem('access_token', res.access_token);
+          localStorage.setItem('role', res.role || 'Admin'); 
+          localStorage.setItem('name', res.name || 'Admin User'); 
           
-          // 300ms delay redirect ke liye
-          setTimeout(() => {
-            window.location.href = '/dashboard';
-          }, 300);
+          this.router.navigate(['/dashboard']);
         },
         error: (err) => {
           this.errorMessage = 'Invalid email or password. Please try again.';

@@ -1,7 +1,7 @@
 import { Component, OnInit, Inject } from '@angular/core';
 import { MatTableModule, MatTableDataSource } from '@angular/material/table';
 import { MatButtonModule } from '@angular/material/button';
-import { HttpClient, HttpClientModule } from '@angular/common/http';
+import { HttpClient, HttpHeaders, HttpClientModule } from '@angular/common/http';
 import { CommonModule } from '@angular/common'; 
 import { MatDialog, MatDialogModule, MatDialogRef, MAT_DIALOG_DATA } from '@angular/material/dialog';
 import { FormsModule } from '@angular/forms';
@@ -43,9 +43,10 @@ import { MatSelectModule } from '@angular/material/select';
         <mat-form-field appearance="outline" style="flex: 1;">
           <mat-label>Role</mat-label>
           <mat-select [(ngModel)]="userData.role" required>
-            <mat-option value="Super Administrator">Super Administrator</mat-option>
-            <mat-option value="Procurement Manager">Procurement Manager</mat-option>
-            <mat-option value="Vendor">Vendor</mat-option>
+            <!-- DYNAMIC ROLES DROPDOWN (Database se aayega) -->
+            <mat-option *ngFor="let role of availableRoles" [value]="role.name">
+              {{ role.name }}
+            </mat-option>
           </mat-select>
         </mat-form-field>
 
@@ -72,19 +73,27 @@ export class UserDialog implements OnInit {
     name: '',
     email: '',
     password: '',
-    role: 'Procurement Manager',
+    role: '',
     status: 'Active'
   };
   isEditMode = false;
+  availableRoles: any[] = []; // Parent se roles yahan aayenge
 
   constructor(
     private dialogRef: MatDialogRef<UserDialog>, 
     private http: HttpClient,
     @Inject(MAT_DIALOG_DATA) public data: any
   ) {
+    if (data && data.roles) {
+      this.availableRoles = data.roles;
+    }
+    
     if (data && data.user) {
       this.userData = { ...data.user };
       this.isEditMode = true;
+    } else if (this.availableRoles.length > 0) {
+      // Naya user banate time pehla role by default select kar do
+      this.userData.role = this.availableRoles[0].name;
     }
   }
 
@@ -100,14 +109,16 @@ export class UserDialog implements OnInit {
       return;
     }
 
+    const token = localStorage.getItem('access_token');
+    const headers = new HttpHeaders({ 'Authorization': `Bearer ${token}` });
+
     if (this.isEditMode) {
-      // Assuming PUT endpoint is configured in backend
-      this.http.put(`http://127.0.0.1:8000/users/${this.userData.user_id}`, this.userData).subscribe({
+      this.http.put(`http://127.0.0.1:8000/users/${this.userData.user_id}`, this.userData, { headers }).subscribe({
         next: () => this.dialogRef.close(true),
         error: (err) => alert('Error updating user')
       });
     } else {
-      this.http.post('http://127.0.0.1:8000/users', this.userData).subscribe({
+      this.http.post('http://127.0.0.1:8000/users', this.userData, { headers }).subscribe({
         next: () => this.dialogRef.close(true),
         error: (err) => alert('Error saving user')
       });
@@ -146,7 +157,6 @@ export class UserDialog implements OnInit {
             <td mat-cell *matCellDef="let element" style="font-weight: 500;"> {{element.name}} </td>
           </ng-container>
 
-          <!-- NAYA EMAIL COLUMN -->
           <ng-container matColumnDef="email">
             <th mat-header-cell *matHeaderCellDef> Email </th>
             <td mat-cell *matCellDef="let element"> {{element.email}} </td>
@@ -166,7 +176,6 @@ export class UserDialog implements OnInit {
             </td>
           </ng-container>
 
-          <!-- NAYA CREATED AT COLUMN -->
           <ng-container matColumnDef="created_at">
             <th mat-header-cell *matHeaderCellDef> Created At </th>
             <td mat-cell *matCellDef="let element"> {{element.created_at | date:'shortDate'}} </td>
@@ -192,15 +201,31 @@ export class UserManagement implements OnInit {
     'user_id', 'name', 'email', 'role', 'status', 'created_at', 'actions'
   ];
   dataSource = new MatTableDataSource<any>([]);
+  availableRoles: any[] = []; // Naya array database roles store karne ke liye
 
   constructor(private http: HttpClient, private dialog: MatDialog) {}
 
   ngOnInit(): void {
+    this.fetchRoles(); // Page load hote hi roles fetch karo
     this.fetchUsers();
   }
 
+  // API Call: Real roles mangwane ke liye
+  fetchRoles(): void {
+    const token = localStorage.getItem('access_token');
+    const headers = new HttpHeaders({ 'Authorization': `Bearer ${token}` });
+    
+    this.http.get<any[]>('http://127.0.0.1:8000/roles', { headers }).subscribe({
+      next: (data) => this.availableRoles = data,
+      error: (err) => console.error('Error fetching roles for dropdown', err)
+    });
+  }
+
   fetchUsers(): void {
-    this.http.get<any[]>('http://127.0.0.1:8000/users').subscribe({
+    const token = localStorage.getItem('access_token');
+    const headers = new HttpHeaders({ 'Authorization': `Bearer ${token}` });
+
+    this.http.get<any[]>('http://127.0.0.1:8000/users', { headers }).subscribe({
       next: (data) => this.dataSource.data = data
     });
   }
@@ -208,7 +233,8 @@ export class UserManagement implements OnInit {
   openUserDialog(user?: any): void {
     const dialogRef = this.dialog.open(UserDialog, { 
       width: '600px',
-      data: { user: user }
+      // User ke sath-sath live roles bhi form me bhej rahe hain
+      data: { user: user, roles: this.availableRoles } 
     });
     dialogRef.afterClosed().subscribe(result => {
       if (result) this.fetchUsers();
@@ -217,7 +243,10 @@ export class UserManagement implements OnInit {
 
   deleteUser(id: number): void {
     if (confirm('Are you sure you want to delete this user?')) {
-      this.http.delete(`http://127.0.0.1:8000/users/${id}`).subscribe({
+      const token = localStorage.getItem('access_token');
+      const headers = new HttpHeaders({ 'Authorization': `Bearer ${token}` });
+
+      this.http.delete(`http://127.0.0.1:8000/users/${id}`, { headers }).subscribe({
         next: () => this.fetchUsers(),
         error: (err) => alert('Error deleting user')
       });
