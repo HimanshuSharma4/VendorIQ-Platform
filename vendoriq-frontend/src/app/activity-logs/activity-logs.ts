@@ -1,4 +1,4 @@
-import { Component, OnInit } from '@angular/core';
+import { Component, OnInit, ChangeDetectorRef } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { HttpClient, HttpHeaders, HttpClientModule } from '@angular/common/http';
@@ -27,7 +27,8 @@ export class ActivityLogs implements OnInit {
 
   logs: ActivityLog[] = [];
 
-  constructor(private http: HttpClient) {}
+  // 1. Yahan ChangeDetectorRef inject kiya gaya hai
+  constructor(private http: HttpClient, private cdr: ChangeDetectorRef) {}
 
   ngOnInit(): void {
     this.fetchActivityLogs();
@@ -40,12 +41,18 @@ export class ActivityLogs implements OnInit {
     this.http.get<any>('http://127.0.0.1:8000/activity-logs', { headers })
       .subscribe({
         next: (data) => {
-          // SAFETY CHECK: Ensure data is an array before assigning
-          this.logs = Array.isArray(data) ? data : [];
+          // SMART CHECK: Ye backend ke dono formats (list ya dictionary) ko handle kar lega
+          const logData = data.items ? data.items : data;
+          
+          this.logs = Array.isArray(logData) ? logData : [];
+          
+          // 2. YAHAN UI KO INSTANT REFRESH KARNE KA COMMAND HAI
+          this.cdr.detectChanges(); 
         },
         error: (err) => {
           console.error('Error fetching activity logs:', err);
-          this.logs = []; // Fallback to empty array on error
+          this.logs = []; 
+          this.cdr.detectChanges(); 
         }
       });
   }

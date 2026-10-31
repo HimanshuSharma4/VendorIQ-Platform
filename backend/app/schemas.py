@@ -254,7 +254,6 @@ class ProcurementCreate(ProcurementBase):
 
 class ProcurementResponse(ProcurementBase):
     id: int
-
     class Config:
         from_attributes = True
 
@@ -274,7 +273,6 @@ class RoleCreate(RoleBase):
 
 class RoleResponse(RoleBase):
     id: int
-
     class Config:
         from_attributes = True
 
@@ -294,6 +292,26 @@ class ActivityLogCreate(ActivityLogBase):
 
 class ActivityLogResponse(ActivityLogBase):
     id: int
+    class Config:
+        from_attributes = True
 
+# ==========================================
+# SYSTEM SETTINGS SCHEMAS
+# ==========================================
+class SystemSettingsBase(BaseModel):
+    platform_name: str
+    company_email: str
+    currency: str
+    timezone: str
+    session_timeout_minutes: int
+    enable_2fa: bool
+    email_notifications: bool
+    maintenance_mode: bool
+
+class SystemSettingsUpdate(SystemSettingsBase):
+    pass
+
+class SystemSettingsResponse(SystemSettingsBase):
+    id: int
     class Config:
         from_attributes = True

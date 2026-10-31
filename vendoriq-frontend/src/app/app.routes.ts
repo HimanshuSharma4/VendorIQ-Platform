@@ -13,9 +13,12 @@ import { DeliveriesComponent } from './deliveries/deliveries';
 import { InvoicesComponent } from './invoices/invoices';
 import { QualityInspectionComponent } from './quality-inspection/quality-inspection';
 import { CommunicationsComponent } from './communications/communications';
-import { NotificationsComponent } from './notifications/notifications'; // NAYA IMPORT
+import { NotificationsComponent } from './notifications/notifications'; 
 import { ActivityLogs } from './activity-logs/activity-logs';
 import { RolesPermissionComponent } from './role-permission/roles-permission';
+
+// NAYA IMPORT SYSTEM SETTINGS KE LIYE
+import { SystemSettingsComponent } from './system-settings/system-settings';
 
 export const routes: Routes = [
   { path: 'login', component: Login },
@@ -36,12 +39,12 @@ export const routes: Routes = [
       { path: 'communications', component: CommunicationsComponent },
       { path: 'activity-logs', component: ActivityLogs },
       { path: 'role-permission', component: RolesPermissionComponent },
-      
-      // NAYA NOTIFICATIONS ROUTE
       { path: 'notifications', component: NotificationsComponent },
-      
       { path: 'procurement', component: Procurement }, 
       { path: 'performance', component: VendorAnalytics }, 
+      
+      // NAYA ROUTE YAHAN ADD KIYA HAI
+      { path: 'system-settings', component: SystemSettingsComponent }
     ]
   }
 ];

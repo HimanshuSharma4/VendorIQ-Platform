@@ -281,3 +281,19 @@ class ActivityLog(Base):
     module = Column(String)
     severity = Column(String) # Info, Warning, Critical
     status = Column(String) # Success, Failed
+
+# =========================
+# SYSTEM SETTINGS MODEL
+# =========================
+class SystemSettings(Base):
+    __tablename__ = "system_settings_config"
+
+    id = Column(Integer, primary_key=True, index=True)
+    platform_name = Column(String, default="VendorIQ")
+    company_email = Column(String, default="admin@vendoriq.com")
+    currency = Column(String, default="INR (₹)")
+    timezone = Column(String, default="Asia/Kolkata")
+    session_timeout_minutes = Column(Integer, default=30)
+    enable_2fa = Column(Boolean, default=False)
+    email_notifications = Column(Boolean, default=True)
+    maintenance_mode = Column(Boolean, default=False)

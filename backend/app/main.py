@@ -40,17 +40,6 @@ class LoginRequest(BaseModel):
     password: str
 
 
-class ActivityLogCreate(BaseModel):
-    user_id: Optional[int] = None
-    user_name: str = "System"
-    action: str
-    module: str
-    severity: str = "Info"
-    status: str = "Success"
-    details: Optional[str] = None
-    ip_address: Optional[str] = None
-
-
 # ==========================================
 # 1. USERS API & AUTH
 # ==========================================
@@ -79,7 +68,6 @@ def login_json(req: LoginRequest, db: Session = Depends(get_db)):
     if not user or user.password != req.password:
         raise HTTPException(status_code=401, detail="Invalid credentials")
 
-    # Bulletproof approach to avoid 500 Internal Server Errors
     user_role = getattr(user, 'role', 'Admin')
     user_name = getattr(user, 'username', getattr(user, 'name', 'Admin User'))
 
@@ -643,119 +631,8 @@ def get_dashboard_analytics(db: Session = Depends(get_db)):
         "approved_spend": approved_spend,
     }
 
-
 # ==========================================
-# 11. ACTIVITY LOGS API
-# ==========================================
-@app.get("/activity-logs")
-def get_activity_logs(
-    search: Optional[str] = None,
-    severity: Optional[str] = None,
-    status_filter: Optional[str] = None,
-    skip: int = 0,
-    limit: int = 100,
-    db: Session = Depends(get_db),
-):
-    query = db.query(models.ActivityLog)
-
-    if search:
-        term = f"%{search}%"
-        query = query.filter(
-            (models.ActivityLog.user_name.ilike(term))
-            | (models.ActivityLog.action.ilike(term))
-            | (models.ActivityLog.module.ilike(term))
-            | (models.ActivityLog.details.ilike(term))
-        )
-
-    if severity and severity.lower() != "all":
-        query = query.filter(models.ActivityLog.severity.ilike(severity))
-
-    if status_filter and status_filter.lower() != "all":
-        query = query.filter(models.ActivityLog.status.ilike(status_filter))
-
-    total = query.count()
-
-    logs = (
-        query.order_by(models.ActivityLog.timestamp.desc())
-        .offset(max(skip, 0))
-        .limit(max(1, min(limit, 500)))
-        .all()
-    )
-
-    return {
-        "total": total,
-        "items": [
-            {
-                "log_id": log.log_id,
-                "timestamp": log.timestamp,
-                "user_id": log.user_id,
-                "user_name": log.user_name,
-                "action": log.action,
-                "module": log.module,
-                "severity": log.severity,
-                "status": log.status,
-                "details": log.details,
-                "ip_address": log.ip_address,
-            }
-            for log in logs
-        ],
-    }
-
-
-@app.post("/activity-logs")
-def create_activity_log(
-    log_data: ActivityLogCreate,
-    db: Session = Depends(get_db),
-):
-    allowed_severities = {"Info", "Warning", "Critical"}
-    allowed_statuses = {"Success", "Failure"}
-
-    if log_data.severity not in allowed_severities:
-        raise HTTPException(status_code=422, detail="Invalid severity")
-
-    if log_data.status not in allowed_statuses:
-        raise HTTPException(status_code=422, detail="Invalid status")
-
-    if log_data.user_id is not None:
-        user = db.query(models.User).filter(
-            models.User.user_id == log_data.user_id
-        ).first()
-
-        if not user:
-            raise HTTPException(status_code=404, detail="User not found")
-
-    new_log = models.ActivityLog(**log_data.model_dump())
-
-    try:
-        db.add(new_log)
-        db.commit()
-        db.refresh(new_log)
-
-        return {
-            "message": "Activity log created successfully",
-            "item": {
-                "log_id": new_log.log_id,
-                "timestamp": new_log.timestamp,
-                "user_id": new_log.user_id,
-                "user_name": new_log.user_name,
-                "action": new_log.action,
-                "module": new_log.module,
-                "severity": new_log.severity,
-                "status": new_log.status,
-                "details": new_log.details,
-                "ip_address": new_log.ip_address,
-            },
-        }
-    except Exception:
-        db.rollback()
-        raise HTTPException(
-            status_code=500,
-            detail="Could not create activity log",
-        )
-
-
-# ==========================================
-# 12. VENDOR PERFORMANCE & RELIABILITY API
+# 11. VENDOR PERFORMANCE & RELIABILITY API
 # ==========================================
 @app.post("/vendor-performance/{vendor_id}/calculate", response_model=schemas.VendorPerformanceResponse)
 def calculate_vendor_performance(vendor_id: int, db: Session = Depends(get_db)):
@@ -822,16 +699,19 @@ def calculate_vendor_performance(vendor_id: int, db: Session = Depends(get_db)):
     db.refresh(performance)
     return performance
 
+
 @app.get("/vendor-performance", response_model=List[schemas.VendorPerformanceResponse])
 def get_all_vendor_performances(db: Session = Depends(get_db)):
     return db.query(models.VendorPerformance).all()
 
+
 # ==========================================
-# 13. PROCUREMENT API
+# 12. PROCUREMENT API
 # ==========================================
 @app.get("/procurements", response_model=List[schemas.ProcurementResponse])
 def get_procurements(db: Session = Depends(get_db)):
     return db.query(models.Procurement).all()
+
 
 @app.post("/procurements", response_model=schemas.ProcurementResponse)
 def create_procurement(
@@ -844,12 +724,14 @@ def create_procurement(
     db.refresh(db_proc)
     return db_proc
 
+
 # ==========================================
-# 14. CONTRACTS & COMPLIANCE API
+# 13. CONTRACTS & COMPLIANCE API
 # ==========================================
 @app.get("/contracts", response_model=List[schemas.ContractResponse])
 def get_contracts(db: Session = Depends(get_db)):
     return db.query(models.Contract).all()
+
 
 @app.post("/contracts", response_model=schemas.ContractResponse)
 def create_contract(
@@ -861,6 +743,7 @@ def create_contract(
     db.commit()
     db.refresh(db_contract)
     return db_contract
+
 
 @app.put("/contracts/{contract_id}", response_model=schemas.ContractResponse)
 def update_contract(
@@ -882,6 +765,7 @@ def update_contract(
     db.refresh(db_contract)
     return db_contract
 
+
 @app.delete("/contracts/{contract_id}")
 def delete_contract(contract_id: int, db: Session = Depends(get_db)):
     db_contract = db.query(models.Contract).filter(
@@ -895,12 +779,14 @@ def delete_contract(contract_id: int, db: Session = Depends(get_db)):
     db.commit()
     return {"message": "Contract deleted successfully"}
 
+
 # ==========================================
-# 15. ROLES & PERMISSIONS API
+# 14. ROLES & PERMISSIONS API
 # ==========================================
 @app.get("/roles", response_model=List[schemas.RoleResponse])
 def get_roles(db: Session = Depends(get_db)):
     return db.query(models.Role).all()
+
 
 @app.post("/roles", response_model=schemas.RoleResponse)
 def create_role(role: schemas.RoleCreate, db: Session = Depends(get_db)):
@@ -909,6 +795,7 @@ def create_role(role: schemas.RoleCreate, db: Session = Depends(get_db)):
     db.commit()
     db.refresh(db_role)
     return db_role
+
 
 @app.put("/roles/{role_id}", response_model=schemas.RoleResponse)
 def update_role(
@@ -927,6 +814,7 @@ def update_role(
     db.refresh(db_role)
     return db_role
 
+
 @app.delete("/roles/{role_id}")
 def delete_role(role_id: int, db: Session = Depends(get_db)):
     db_role = db.query(models.Role).filter(models.Role.id == role_id).first()
@@ -937,18 +825,55 @@ def delete_role(role_id: int, db: Session = Depends(get_db)):
     db.commit()
     return {"message": "Role deleted successfully"}
 
+
 # ==========================================
-# 16. ACTIVITY LOGS API
+# 15. ACTIVITY LOGS API (FINAL CORRECT VERSION)
 # ==========================================
 @app.get("/activity-logs", response_model=List[schemas.ActivityLogResponse])
 def get_activity_logs(db: Session = Depends(get_db)):
-    # .desc() lagaya hai taaki sabse naye logs sabse upar aayein
     return db.query(models.ActivityLog).order_by(models.ActivityLog.id.desc()).all()
+
 
 @app.post("/activity-logs", response_model=schemas.ActivityLogResponse)
 def create_activity_log(log: schemas.ActivityLogCreate, db: Session = Depends(get_db)):
-    db_log = models.ActivityLog(**log.model_dump())
-    db.add(db_log)
+    try:
+        db_log = models.ActivityLog(**log.model_dump())
+        db.add(db_log)
+        db.commit()
+        db.refresh(db_log)
+        return db_log
+    except Exception as e:
+        db.rollback()
+        print(f"CRITICAL DB ERROR IN ACTIVITY LOGS: {str(e)}") 
+        raise HTTPException(status_code=500, detail=str(e))
+
+
+# ==========================================
+# 17. SYSTEM SETTINGS API
+# ==========================================
+@app.get("/system-settings", response_model=schemas.SystemSettingsResponse)
+def get_system_settings(db: Session = Depends(get_db)):
+    settings = db.query(models.SystemSettings).first()
+    # Agar database me koi setting nahi hai, to default create kardo
+    if not settings:
+        settings = models.SystemSettings()
+        db.add(settings)
+        db.commit()
+        db.refresh(settings)
+    return settings
+
+@app.put("/system-settings", response_model=schemas.SystemSettingsResponse)
+def update_system_settings(
+    settings_data: schemas.SystemSettingsUpdate, 
+    db: Session = Depends(get_db)
+):
+    settings = db.query(models.SystemSettings).first()
+    if not settings:
+        raise HTTPException(status_code=404, detail="Settings not initialized")
+        
+    for key, value in settings_data.model_dump().items():
+        setattr(settings, key, value)
+        
     db.commit()
-    db.refresh(db_log)
-    return db_log
+    db.refresh(settings)
+    return settings
