@@ -17,7 +17,4 @@ Enterprise-grade vendor reliability and procurement management dashboard built f
 * Vendor Risk Distribution & Performance Tracking
 * Secure Authentication & Role-based Access Control
 
-## 🔑 Demo Credentials (For Testing)
-To explore the live dashboard, you can use the following test account:
-* **Email:** `admin@vendoriq.com`
-* **Password:** `your_password123` 
+` 
