@@ -18,6 +18,8 @@ from .database import engine, get_db
 models.Base.metadata.create_all(bind=engine)
 
 
+
+
 # ==========================================
 # FASTAPI APPLICATION
 # ==========================================
@@ -25,11 +27,45 @@ app = FastAPI(title="VendorIQ Reliability Intelligence Platform")
 
 app.add_middleware(
     CORSMiddleware,
-    allow_origins=["http://localhost:4200", "http://127.0.0.1:4200","https://vendor-iq-platform.vercel.app"],
+    allow_origins=["http://localhost:4200", "http://127.0.0.1:4200", "https://vendor-iq-platform.vercel.app"],
     allow_credentials=True,
     allow_methods=["*"],
     allow_headers=["*"],
 )
+
+# --- YE RAHAA AAPKA STARTUP SEEDING CODE ---
+from .database import SessionLocal
+
+@app.on_event("startup")
+def startup_seed_data():
+    db = SessionLocal()
+    try:
+        if db.query(models.Role).count() == 0:
+            db.add(models.Role(name="Admin", description="Administrator Role"))
+            db.commit()
+            print("Default Role seeded successfully!")
+
+        if db.query(models.Vendor).count() == 0:
+            db.add(models.Vendor(
+                vendor_name="Acme Tech Solutions",
+                category="Technology",
+                status="Active",
+                contact_person="Rahul Sharma",
+                email="rahul@acmetech.com",
+                phone="9876543210",
+                city="Noida",
+                state="Uttar Pradesh",
+                country="India",
+                gst_number="09AAAAA0000A1Z5"
+            ))
+            db.commit()
+            print("Default Vendor seeded successfully!")
+    except Exception as e:
+        db.rollback()
+        print(f"Seeding failed: {e}")
+    finally:
+        db.close()
+# ---------------------------------------------
 
 
 # ==========================================
