@@ -70,7 +70,7 @@ export class ContractDialog {
     const token = localStorage.getItem('access_token');
     const headers = new HttpHeaders({ 'Authorization': `Bearer ${token}` });
 
-    this.http.post('http://127.0.0.1:8000/contracts', this.contractData, { headers })
+    this.http.post('https://vendoriq-platform.onrender.com/contracts', this.contractData, { headers })
       .subscribe({
         next: () => this.dialogRef.close(true),
         error: (err) => console.error('Error saving contract:', err)

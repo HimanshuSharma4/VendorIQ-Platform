@@ -54,7 +54,7 @@ export class PerformanceDialog {
     const token = localStorage.getItem('access_token');
     const headers = new HttpHeaders({ 'Authorization': `Bearer ${token}` });
 
-    this.http.post('http://127.0.0.1:8000/performance', this.recordData, { headers })
+    this.http.post('https://vendoriq-platform.onrender.com/performance', this.recordData, { headers })
       .subscribe({
         next: () => this.dialogRef.close(true),
         error: (err) => console.error('Error adding record:', err)
@@ -89,7 +89,7 @@ export class Performance implements OnInit {
     const token = localStorage.getItem('access_token');
     const headers = new HttpHeaders({ 'Authorization': `Bearer ${token}` });
 
-    this.http.get<any[]>('http://127.0.0.1:8000/performance', { headers })
+    this.http.get<any[]>('https://vendoriq-platform.onrender.com/performance', { headers })
       .subscribe({
         next: (data) => {
           this.dataSource.data = data;

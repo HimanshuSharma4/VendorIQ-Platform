@@ -129,7 +129,7 @@ export class InspectionDialog implements OnInit {
   }
 
   ngOnInit() {
-    this.http.get<any[]>('http://127.0.0.1:8000/purchase-orders').subscribe(data => {
+    this.http.get<any[]>('https://vendoriq-platform.onrender.com/purchase-orders').subscribe(data => {
       this.purchaseOrders = data;
     });
   }
@@ -159,12 +159,12 @@ export class InspectionDialog implements OnInit {
     payload.inspection_date = this.formatDate(this.inspectionData.inspection_date);
 
     if (this.isEditMode) {
-      this.http.put(`http://127.0.0.1:8000/quality-inspections/${payload.inspection_id}`, payload).subscribe({
+      this.http.put(`https://vendoriq-platform.onrender.com/quality-inspections/${payload.inspection_id}`, payload).subscribe({
         next: () => this.dialogRef.close(true),
         error: (err) => alert('Error updating inspection')
       });
     } else {
-      this.http.post('http://127.0.0.1:8000/quality-inspections', payload).subscribe({
+      this.http.post('https://vendoriq-platform.onrender.com/quality-inspections', payload).subscribe({
         next: () => this.dialogRef.close(true),
         error: (err) => alert('Error saving inspection')
       });
@@ -277,7 +277,7 @@ export class QualityInspectionComponent implements OnInit {
   }
 
   fetchInspections(): void {
-    this.http.get<any[]>('http://127.0.0.1:8000/quality-inspections').subscribe({
+    this.http.get<any[]>('https://vendoriq-platform.onrender.com/quality-inspections').subscribe({
       next: (data) => this.dataSource.data = data
     });
   }
@@ -300,7 +300,7 @@ export class QualityInspectionComponent implements OnInit {
 
   deleteInspection(id: number): void {
     if (confirm('Are you sure you want to delete this log?')) {
-      this.http.delete(`http://127.0.0.1:8000/quality-inspections/${id}`).subscribe({
+      this.http.delete(`https://vendoriq-platform.onrender.com/quality-inspections/${id}`).subscribe({
         next: () => this.fetchInspections(),
         error: (err) => alert('Error deleting log')
       });

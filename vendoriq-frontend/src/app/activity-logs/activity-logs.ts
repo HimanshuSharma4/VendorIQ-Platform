@@ -38,7 +38,7 @@ export class ActivityLogs implements OnInit {
     const token = localStorage.getItem('access_token');
     const headers = new HttpHeaders({ 'Authorization': `Bearer ${token}` });
 
-    this.http.get<any>('http://127.0.0.1:8000/activity-logs', { headers })
+    this.http.get<any>('https://vendoriq-platform.onrender.com/activity-logs', { headers })
       .subscribe({
         next: (data) => {
           // SMART CHECK: Ye backend ke dono formats (list ya dictionary) ko handle kar lega

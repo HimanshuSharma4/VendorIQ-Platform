@@ -51,7 +51,7 @@ export class UserDialog {
     const token = localStorage.getItem('access_token');
     const headers = new HttpHeaders({ 'Authorization': `Bearer ${token}` });
 
-    this.http.post('http://127.0.0.1:8000/users', this.userData, { headers })
+    this.http.post('https://vendoriq-platform.onrender.com/users', this.userData, { headers })
       .subscribe({
         next: () => this.dialogRef.close(true),
         error: (err) => {

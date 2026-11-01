@@ -1,18 +1,17 @@
 import { Injectable } from '@angular/core';
 import { HttpClient, HttpHeaders } from '@angular/common/http';
+import { environment } from '../environments/environment'; // <-- Ye line add karni hai (VS Code apne aap sahi path adjust kar lega agar error aaye)
 
 @Injectable({
   providedIn: 'root'
 })
 export class AuthService {
-  // Hamare FastAPI backend ka address
-  private apiUrl = 'http://127.0.0.1:8000';
+  // Hardcoded localhost ki jagah ab ye environment file se live Render URL uthayega
+  private apiUrl = environment.apiUrl;
 
   constructor(private http: HttpClient) { }
 
-  // Ye function backend ko Email aur Password bhejega
   login(email: string, password: string) {
-    // FastAPI ko data form format me chahiye hota hai (JSON nahi)
     const body = new URLSearchParams();
     body.set('username', email);
     body.set('password', password);
@@ -23,7 +22,6 @@ export class AuthService {
       })
     };
 
-    // POST request bhej rahe hain /users/login par
     return this.http.post(`${this.apiUrl}/users/login`, body.toString(), options);
   }
 }

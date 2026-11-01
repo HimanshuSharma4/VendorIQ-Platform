@@ -92,7 +92,7 @@ export class Dashboard implements OnInit {
 
     const headers = new HttpHeaders({ 'Authorization': `Bearer ${token}` });
 
-    this.http.get<any>('http://127.0.0.1:8000/analytics', { headers })
+    this.http.get<any>('https://vendoriq-platform.onrender.com/analytics', { headers })
       .subscribe({
         next: (data) => {
           this.stats = data;
@@ -107,12 +107,12 @@ export class Dashboard implements OnInit {
     if (!token) return;
     const headers = new HttpHeaders({ 'Authorization': `Bearer ${token}` });
 
-    this.http.get<any[]>('http://127.0.0.1:8000/vendors', { headers }).subscribe({
+    this.http.get<any[]>('https://vendoriq-platform.onrender.com/vendors', { headers }).subscribe({
       next: (vendors) => {
         vendors.forEach(v => this.vendorsMap[v.vendor_id] = v.vendor_name);
 
         // Fetch Live Purchase Orders & Calculate 6-Month Spend Trend
-        this.http.get<any[]>('http://127.0.0.1:8000/purchase-orders', { headers }).subscribe(pos => {
+        this.http.get<any[]>('https://vendoriq-platform.onrender.com/purchase-orders', { headers }).subscribe(pos => {
           this.recentPOs = pos.map(po => ({
             po_id: po.po_id,
             vendor: this.vendorsMap[po.vendor_id] || 'Unknown Vendor',
@@ -159,7 +159,7 @@ export class Dashboard implements OnInit {
         });
 
         // Fetch Vendor Performance & Calculate Risk Distribution
-        this.http.get<any[]>('http://127.0.0.1:8000/vendor-performance', { headers }).subscribe(perfs => {
+        this.http.get<any[]>('https://vendoriq-platform.onrender.com/vendor-performance', { headers }).subscribe(perfs => {
           let lowRisk = 0, medRisk = 0, highRisk = 0;
 
           this.vendorPerformance = perfs.map(vp => {

@@ -217,12 +217,12 @@ export class SystemSettingsComponent implements OnInit {
       severity: logSeverity,
       status: logStatus
     };
-    this.http.post('http://127.0.0.1:8000/activity-logs', logData, { headers: this.getHeaders() }).subscribe();
+    this.http.post('https://vendoriq-platform.onrender.com/activity-logs', logData, { headers: this.getHeaders() }).subscribe();
   }
 
   fetchSettings() {
     this.isLoading = true;
-    this.http.get('http://127.0.0.1:8000/system-settings', { headers: this.getHeaders() })
+    this.http.get('https://vendoriq-platform.onrender.com/system-settings', { headers: this.getHeaders() })
       .subscribe({
         next: (data) => {
           this.settings = data;
@@ -241,7 +241,7 @@ export class SystemSettingsComponent implements OnInit {
     this.isSaving = true;
     this.successMessage = '';
 
-    this.http.put('http://127.0.0.1:8000/system-settings', this.settings, { headers: this.getHeaders() })
+    this.http.put('https://vendoriq-platform.onrender.com/system-settings', this.settings, { headers: this.getHeaders() })
       .subscribe({
         next: () => {
           this.isSaving = false;

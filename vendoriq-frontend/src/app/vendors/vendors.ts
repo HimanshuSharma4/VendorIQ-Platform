@@ -309,12 +309,12 @@ export class VendorDialog implements OnInit {
     payload.registration_date = this.formatDate(this.vendorData.registration_date);
 
     if (this.isEditMode) {
-      this.http.put(`http://127.0.0.1:8000/vendors/${payload.vendor_id}`, payload).subscribe({
+      this.http.put(`https://vendoriq-platform.onrender.com/vendors/${payload.vendor_id}`, payload).subscribe({
         next: () => this.dialogRef.close(true),
         error: (err) => alert('Error updating vendor')
       });
     } else {
-      this.http.post('http://127.0.0.1:8000/vendors', payload).subscribe({
+      this.http.post('https://vendoriq-platform.onrender.com/vendors', payload).subscribe({
         next: () => this.dialogRef.close(true),
         error: (err) => alert('Error saving vendor')
       });
@@ -342,7 +342,7 @@ export class VendorsComponent implements OnInit {
   }
 
   fetchVendors(): void {
-    this.http.get<any[]>('http://127.0.0.1:8000/vendors').subscribe({
+    this.http.get<any[]>('https://vendoriq-platform.onrender.com/vendors').subscribe({
       next: (data) => this.dataSource.data = data
     });
   }
@@ -359,7 +359,7 @@ export class VendorsComponent implements OnInit {
 
   deleteVendor(id: number): void {
     if (confirm('Are you sure you want to delete this Vendor? Warning: Linked Products and POs might be affected!')) {
-      this.http.delete(`http://127.0.0.1:8000/vendors/${id}`).subscribe({
+      this.http.delete(`https://vendoriq-platform.onrender.com/vendors/${id}`).subscribe({
         next: () => this.fetchVendors(),
         error: (err) => alert('Error deleting vendor')
       });

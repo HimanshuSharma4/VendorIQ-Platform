@@ -25,7 +25,7 @@ export class VendorAnalytics implements OnInit {
   }
 
   fetchPerformanceData(): void {
-    this.http.get<any[]>('http://127.0.0.1:8000/vendor-performance').subscribe({
+    this.http.get<any[]>('https://vendoriq-platform.onrender.com/vendor-performance').subscribe({
       next: (data) => this.dataSource.data = data,
       error: (err) => console.error("Error fetching data", err)
     });
@@ -34,7 +34,7 @@ export class VendorAnalytics implements OnInit {
   recalculateScore(): void {
     const vendorId = prompt("Enter Vendor ID to recalculate scores from database:");
     if (vendorId) {
-      this.http.post(`http://127.0.0.1:8000/vendor-performance/${vendorId}/calculate`, {}).subscribe({
+      this.http.post(`https://vendoriq-platform.onrender.com/vendor-performance/${vendorId}/calculate`, {}).subscribe({
         next: () => {
           alert('Scores calculated & updated successfully!');
           this.fetchPerformanceData();

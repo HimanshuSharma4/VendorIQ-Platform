@@ -105,7 +105,7 @@ export class ContractDialog {
     const token = localStorage.getItem('access_token');
     const headers = new HttpHeaders({ 'Authorization': `Bearer ${token}` });
 
-    this.http.post('http://127.0.0.1:8000/contracts', payload, { headers })
+    this.http.post('https://vendoriq-platform.onrender.com/contracts', payload, { headers })
       .subscribe({
         next: () => this.dialogRef.close(true),
         error: (err) => {
@@ -214,7 +214,7 @@ export class Contracts implements OnInit {
     const token = localStorage.getItem('access_token');
     const headers = new HttpHeaders({ 'Authorization': `Bearer ${token}` });
 
-    this.http.get<any[]>('http://127.0.0.1:8000/contracts', { headers })
+    this.http.get<any[]>('https://vendoriq-platform.onrender.com/contracts', { headers })
       .subscribe({
         next: (data) => this.dataSource.data = data,
         error: (err) => console.error('Error fetching contracts', err)
@@ -233,7 +233,7 @@ export class Contracts implements OnInit {
       const token = localStorage.getItem('access_token');
       const headers = new HttpHeaders({ 'Authorization': `Bearer ${token}` });
 
-      this.http.delete(`http://127.0.0.1:8000/contracts/${id}`, { headers })
+      this.http.delete(`https://vendoriq-platform.onrender.com/contracts/${id}`, { headers })
         .subscribe({
           next: () => this.fetchContracts(),
           error: (err) => alert('Error deleting contract')

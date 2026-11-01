@@ -86,7 +86,7 @@ export class AddNotificationDialog implements OnInit {
   constructor(private dialogRef: MatDialogRef<AddNotificationDialog>, private http: HttpClient) {}
 
   ngOnInit() {
-    this.http.get<any[]>('http://127.0.0.1:8000/vendors').subscribe(data => {
+    this.http.get<any[]>('https://vendoriq-platform.onrender.com/vendors').subscribe(data => {
       this.vendors = data;
     });
   }
@@ -106,7 +106,7 @@ export class AddNotificationDialog implements OnInit {
     }
     const payload = { ...this.notifData, created_date: this.formatDate(this.notifData.created_date) };
     
-    this.http.post('http://127.0.0.1:8000/notifications', payload).subscribe({
+    this.http.post('https://vendoriq-platform.onrender.com/notifications', payload).subscribe({
       next: () => this.dialogRef.close(true),
       error: () => alert('Error saving notification')
     });
@@ -205,7 +205,7 @@ export class NotificationsComponent implements OnInit {
   }
 
   fetchNotifications(): void {
-    this.http.get<any[]>('http://127.0.0.1:8000/notifications').subscribe({
+    this.http.get<any[]>('https://vendoriq-platform.onrender.com/notifications').subscribe({
       next: (data) => this.dataSource.data = data
     });
   }
@@ -218,7 +218,7 @@ export class NotificationsComponent implements OnInit {
   }
 
   markAsRead(id: number): void {
-    this.http.put(`http://127.0.0.1:8000/notifications/${id}/read`, {}).subscribe({
+    this.http.put(`https://vendoriq-platform.onrender.com/notifications/${id}/read`, {}).subscribe({
       next: () => this.fetchNotifications(),
       error: () => alert('Error updating status')
     });
@@ -226,7 +226,7 @@ export class NotificationsComponent implements OnInit {
 
   deleteNotification(id: number): void {
     if (confirm('Delete this notification?')) {
-      this.http.delete(`http://127.0.0.1:8000/notifications/${id}`).subscribe({
+      this.http.delete(`https://vendoriq-platform.onrender.com/notifications/${id}`).subscribe({
         next: () => this.fetchNotifications(),
         error: () => alert('Error deleting notification')
       });

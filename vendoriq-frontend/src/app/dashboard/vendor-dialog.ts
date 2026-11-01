@@ -86,7 +86,7 @@ export class VendorDialog {
 
     if (this.isEditMode) {
       // EDIT: PUT Request
-      this.http.put(`http://127.0.0.1:8000/vendors/${this.vendor.vendor_id}`, this.vendor, { headers })
+      this.http.put(`https://vendoriq-platform.onrender.com/vendors/${this.vendor.vendor_id}`, this.vendor, { headers })
         .subscribe({
           next: () => {
             this.dialogRef.close(true); // Table refresh hogi
@@ -97,7 +97,7 @@ export class VendorDialog {
         });
     } else {
       // ADD: POST Request
-      this.http.post('http://127.0.0.1:8000/vendors', this.vendor, { headers })
+      this.http.post('https://vendoriq-platform.onrender.com/vendors', this.vendor, { headers })
         .subscribe({
           next: () => {
             this.dialogRef.close(true); // Table refresh hogi

@@ -153,8 +153,8 @@ export class PurchaseOrderDialog implements OnInit {
   }
 
   ngOnInit() {
-    this.http.get<any[]>('http://127.0.0.1:8000/vendors').subscribe(data => this.vendors = data);
-    this.http.get<any[]>('http://127.0.0.1:8000/products').subscribe(data => this.products = data);
+    this.http.get<any[]>('https://vendoriq-platform.onrender.com/vendors').subscribe(data => this.vendors = data);
+    this.http.get<any[]>('https://vendoriq-platform.onrender.com/products').subscribe(data => this.products = data);
   }
 
   onProductSelect(productId: number) {
@@ -193,12 +193,12 @@ export class PurchaseOrderDialog implements OnInit {
     payload.actual_delivery_date = this.formatDate(this.poData.actual_delivery_date);
 
     if (this.isEditMode) {
-      this.http.put(`http://127.0.0.1:8000/purchase-orders/${payload.po_id}`, payload).subscribe({
+      this.http.put(`https://vendoriq-platform.onrender.com/purchase-orders/${payload.po_id}`, payload).subscribe({
         next: () => this.dialogRef.close(true),
         error: (err) => alert('Error updating PO')
       });
     } else {
-      this.http.post('http://127.0.0.1:8000/purchase-orders', payload).subscribe({
+      this.http.post('https://vendoriq-platform.onrender.com/purchase-orders', payload).subscribe({
         next: () => this.dialogRef.close(true),
         error: (err) => alert('Error saving PO')
       });
@@ -228,7 +228,7 @@ export class PurchaseOrders implements OnInit {
   }
 
   fetchPOs(): void {
-    this.http.get<any[]>('http://127.0.0.1:8000/purchase-orders').subscribe({
+    this.http.get<any[]>('https://vendoriq-platform.onrender.com/purchase-orders').subscribe({
       next: (data) => this.dataSource.data = data
     });
   }
@@ -245,7 +245,7 @@ export class PurchaseOrders implements OnInit {
 
   deletePO(id: number): void {
     if (confirm('Are you sure you want to delete this PO?')) {
-      this.http.delete(`http://127.0.0.1:8000/purchase-orders/${id}`).subscribe({
+      this.http.delete(`https://vendoriq-platform.onrender.com/purchase-orders/${id}`).subscribe({
         next: () => this.fetchPOs(),
         error: (err) => alert('Error deleting PO')
       });

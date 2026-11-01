@@ -142,7 +142,7 @@ export class DeliveryDialog implements OnInit {
   }
 
   ngOnInit() {
-    this.http.get<any[]>('http://127.0.0.1:8000/purchase-orders').subscribe(data => {
+    this.http.get<any[]>('https://vendoriq-platform.onrender.com/purchase-orders').subscribe(data => {
       this.purchaseOrders = data;
     });
   }
@@ -205,12 +205,12 @@ export class DeliveryDialog implements OnInit {
     payload.delivery_date = this.formatDate(this.deliveryData.delivery_date);
 
     if (this.isEditMode) {
-      this.http.put(`http://127.0.0.1:8000/deliveries/${payload.delivery_id}`, payload).subscribe({
+      this.http.put(`https://vendoriq-platform.onrender.com/deliveries/${payload.delivery_id}`, payload).subscribe({
         next: () => this.dialogRef.close(true),
         error: (err) => alert('Error updating delivery')
       });
     } else {
-      this.http.post('http://127.0.0.1:8000/deliveries', payload).subscribe({
+      this.http.post('https://vendoriq-platform.onrender.com/deliveries', payload).subscribe({
         next: () => this.dialogRef.close(true),
         error: (err) => alert('Error saving delivery')
       });
@@ -332,7 +332,7 @@ export class DeliveriesComponent implements OnInit {
   }
 
   fetchDeliveries(): void {
-    this.http.get<any[]>('http://127.0.0.1:8000/deliveries').subscribe({
+    this.http.get<any[]>('https://vendoriq-platform.onrender.com/deliveries').subscribe({
       next: (data) => this.dataSource.data = data
     });
   }
@@ -355,7 +355,7 @@ export class DeliveriesComponent implements OnInit {
 
   deleteDelivery(id: number): void {
     if (confirm('Are you sure you want to delete this Delivery log?')) {
-      this.http.delete(`http://127.0.0.1:8000/deliveries/${id}`).subscribe({
+      this.http.delete(`https://vendoriq-platform.onrender.com/deliveries/${id}`).subscribe({
         next: () => this.fetchDeliveries(),
         error: (err) => alert('Error deleting delivery')
       });

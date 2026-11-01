@@ -125,7 +125,7 @@ export class InvoiceDialog implements OnInit {
   }
 
   ngOnInit() {
-    this.http.get<any[]>('http://127.0.0.1:8000/purchase-orders').subscribe(data => {
+    this.http.get<any[]>('https://vendoriq-platform.onrender.com/purchase-orders').subscribe(data => {
       this.purchaseOrders = data;
     });
   }
@@ -158,12 +158,12 @@ export class InvoiceDialog implements OnInit {
     payload.payment_date = this.invoiceData.payment_status === 'Paid' ? this.formatDate(this.invoiceData.payment_date) : null;
 
     if (this.isEditMode) {
-      this.http.put(`http://127.0.0.1:8000/invoices/${payload.invoice_id}`, payload).subscribe({
+      this.http.put(`https://vendoriq-platform.onrender.com/invoices/${payload.invoice_id}`, payload).subscribe({
         next: () => this.dialogRef.close(true),
         error: (err) => alert('Error updating invoice')
       });
     } else {
-      this.http.post('http://127.0.0.1:8000/invoices', payload).subscribe({
+      this.http.post('https://vendoriq-platform.onrender.com/invoices', payload).subscribe({
         next: () => this.dialogRef.close(true),
         error: (err) => alert('Error saving invoice')
       });
@@ -266,7 +266,7 @@ export class InvoicesComponent implements OnInit {
   }
 
   fetchInvoices(): void {
-    this.http.get<any[]>('http://127.0.0.1:8000/invoices').subscribe({
+    this.http.get<any[]>('https://vendoriq-platform.onrender.com/invoices').subscribe({
       next: (data) => this.dataSource.data = data
     });
   }
@@ -283,7 +283,7 @@ export class InvoicesComponent implements OnInit {
 
   deleteInvoice(id: number): void {
     if (confirm('Are you sure you want to delete this Invoice?')) {
-      this.http.delete(`http://127.0.0.1:8000/invoices/${id}`).subscribe({
+      this.http.delete(`https://vendoriq-platform.onrender.com/invoices/${id}`).subscribe({
         next: () => this.fetchInvoices(),
         error: (err) => alert('Error deleting invoice')
       });

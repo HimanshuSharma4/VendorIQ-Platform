@@ -100,19 +100,19 @@ export class ProductDialog implements OnInit {
   }
 
   ngOnInit() {
-    this.http.get<any[]>('http://127.0.0.1:8000/vendors').subscribe({
+    this.http.get<any[]>('https://vendoriq-platform.onrender.com/vendors').subscribe({
       next: (data) => this.vendors = data
     });
   }
 
   saveProduct() {
     if (this.isEditMode) {
-      this.http.put(`http://127.0.0.1:8000/products/${this.productData.product_id}`, this.productData).subscribe({
+      this.http.put(`https://vendoriq-platform.onrender.com/products/${this.productData.product_id}`, this.productData).subscribe({
         next: () => this.dialogRef.close(true),
         error: (err) => alert('Error updating product')
       });
     } else {
-      this.http.post('http://127.0.0.1:8000/products', this.productData).subscribe({
+      this.http.post('https://vendoriq-platform.onrender.com/products', this.productData).subscribe({
         next: () => this.dialogRef.close(true),
         error: (err) => alert('Error saving product')
       });
@@ -138,7 +138,7 @@ export class Products implements OnInit {
   }
 
   fetchProducts(): void {
-    this.http.get<any[]>('http://127.0.0.1:8000/products').subscribe({
+    this.http.get<any[]>('https://vendoriq-platform.onrender.com/products').subscribe({
       next: (data) => this.dataSource.data = data
     });
   }
@@ -155,7 +155,7 @@ export class Products implements OnInit {
 
   deleteProduct(id: number): void {
     if (confirm('Are you sure you want to delete this product?')) {
-      this.http.delete(`http://127.0.0.1:8000/products/${id}`).subscribe({
+      this.http.delete(`https://vendoriq-platform.onrender.com/products/${id}`).subscribe({
         next: () => this.fetchProducts(),
         error: (err) => alert('Error deleting product')
       });

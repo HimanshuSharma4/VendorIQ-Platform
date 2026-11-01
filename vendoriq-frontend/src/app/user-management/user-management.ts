@@ -108,7 +108,7 @@ export class UserDialog implements OnInit {
       severity: logSeverity,
       status: logStatus
     };
-    this.http.post('http://127.0.0.1:8000/activity-logs', logData, { headers }).subscribe();
+    this.http.post('https://vendoriq-platform.onrender.com/activity-logs', logData, { headers }).subscribe();
   }
 
   saveUser() {
@@ -125,7 +125,7 @@ export class UserDialog implements OnInit {
     const headers = new HttpHeaders({ 'Authorization': `Bearer ${token}` });
 
     if (this.isEditMode) {
-      this.http.put(`http://127.0.0.1:8000/users/${this.userData.user_id}`, this.userData, { headers }).subscribe({
+      this.http.put(`https://vendoriq-platform.onrender.com/users/${this.userData.user_id}`, this.userData, { headers }).subscribe({
         next: () => {
           this.logActivity(`Updated user profile: ${this.userData.name}`); // LOG HERE
           this.dialogRef.close(true);
@@ -133,7 +133,7 @@ export class UserDialog implements OnInit {
         error: (err) => alert('Error updating user')
       });
     } else {
-      this.http.post('http://127.0.0.1:8000/users', this.userData, { headers }).subscribe({
+      this.http.post('https://vendoriq-platform.onrender.com/users', this.userData, { headers }).subscribe({
         next: () => {
           this.logActivity(`Created new system user: ${this.userData.name}`, 'Info', 'Success'); // LOG HERE
           this.dialogRef.close(true);
@@ -240,14 +240,14 @@ export class UserManagement implements OnInit {
       severity: logSeverity,
       status: logStatus
     };
-    this.http.post('http://127.0.0.1:8000/activity-logs', logData, { headers }).subscribe();
+    this.http.post('https://vendoriq-platform.onrender.com/activity-logs', logData, { headers }).subscribe();
   }
 
   fetchRoles(): void {
     const token = localStorage.getItem('access_token');
     const headers = new HttpHeaders({ 'Authorization': `Bearer ${token}` });
     
-    this.http.get<any[]>('http://127.0.0.1:8000/roles', { headers }).subscribe({
+    this.http.get<any[]>('https://vendoriq-platform.onrender.com/roles', { headers }).subscribe({
       next: (data) => this.availableRoles = data,
       error: (err) => console.error('Error fetching roles for dropdown', err)
     });
@@ -257,7 +257,7 @@ export class UserManagement implements OnInit {
     const token = localStorage.getItem('access_token');
     const headers = new HttpHeaders({ 'Authorization': `Bearer ${token}` });
 
-    this.http.get<any[]>('http://127.0.0.1:8000/users', { headers }).subscribe({
+    this.http.get<any[]>('https://vendoriq-platform.onrender.com/users', { headers }).subscribe({
       next: (data) => this.dataSource.data = data
     });
   }
@@ -277,7 +277,7 @@ export class UserManagement implements OnInit {
       const token = localStorage.getItem('access_token');
       const headers = new HttpHeaders({ 'Authorization': `Bearer ${token}` });
 
-      this.http.delete(`http://127.0.0.1:8000/users/${user.user_id}`, { headers }).subscribe({
+      this.http.delete(`https://vendoriq-platform.onrender.com/users/${user.user_id}`, { headers }).subscribe({
         next: () => {
           this.logActivity(`Deleted user account: ${user.name}`, 'Critical', 'Success'); // LOG HERE
           this.fetchUsers();

@@ -27,7 +27,7 @@ export class Login {
       password: this.password
     };
 
-    this.http.post<any>('http://127.0.0.1:8000/users/login', body)
+    this.http.post<any>('https://vendoriq-platform.onrender.com/users/login', body)
       .subscribe({
         next: (res) => {
           localStorage.setItem('access_token', res.access_token);

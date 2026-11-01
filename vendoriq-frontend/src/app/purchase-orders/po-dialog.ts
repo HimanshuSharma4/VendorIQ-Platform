@@ -135,7 +135,7 @@ export class PODialog implements OnInit {
   fetchVendors() {
     const token = localStorage.getItem('access_token');
     const headers = new HttpHeaders({ 'Authorization': `Bearer ${token}` });
-    this.http.get<any[]>('http://127.0.0.1:8000/vendors', { headers }).subscribe({
+    this.http.get<any[]>('https://vendoriq-platform.onrender.com/vendors', { headers }).subscribe({
       next: (data) => this.vendors = data,
       error: (err) => console.error('Error fetching vendors:', err)
     });
@@ -144,7 +144,7 @@ export class PODialog implements OnInit {
   fetchProducts() {
     const token = localStorage.getItem('access_token');
     const headers = new HttpHeaders({ 'Authorization': `Bearer ${token}` });
-    this.http.get<any[]>('http://127.0.0.1:8000/products', { headers }).subscribe({
+    this.http.get<any[]>('https://vendoriq-platform.onrender.com/products', { headers }).subscribe({
       next: (data) => this.products = data,
       error: (err) => console.error('Error fetching products:', err)
     });
@@ -164,7 +164,7 @@ export class PODialog implements OnInit {
     
     if (this.isEditMode) {
       // PUT API for Update
-      this.http.put(`http://127.0.0.1:8000/purchase-orders/${this.poData.po_id}`, this.poData, { headers }).subscribe({
+      this.http.put(`https://vendoriq-platform.onrender.com/purchase-orders/${this.poData.po_id}`, this.poData, { headers }).subscribe({
         next: () => this.dialogRef.close(true),
         error: (err) => {
           console.error(err);
@@ -173,7 +173,7 @@ export class PODialog implements OnInit {
       });
     } else {
       // POST API for Create
-      this.http.post('http://127.0.0.1:8000/purchase-orders', this.poData, { headers }).subscribe({
+      this.http.post('https://vendoriq-platform.onrender.com/purchase-orders', this.poData, { headers }).subscribe({
         next: () => this.dialogRef.close(true), 
         error: (err) => {
           console.error(err);

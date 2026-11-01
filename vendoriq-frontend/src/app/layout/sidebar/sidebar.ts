@@ -35,7 +35,7 @@ export class Sidebar implements OnInit {
     if (!token) return;
     const headers = new HttpHeaders({ 'Authorization': `Bearer ${token}` });
 
-    this.http.get<any[]>('http://127.0.0.1:8000/roles', { headers }).subscribe({
+    this.http.get<any[]>('https://vendoriq-platform.onrender.com/roles', { headers }).subscribe({
       next: (roles) => {
         const currentRoleObj = roles.find(r => r.name === this.userRole);
         

@@ -152,7 +152,7 @@ export class ComposeDialog implements OnInit {
   }
 
   ngOnInit() {
-    this.http.get<any[]>('http://127.0.0.1:8000/vendors').subscribe(data => {
+    this.http.get<any[]>('https://vendoriq-platform.onrender.com/vendors').subscribe(data => {
       this.vendors = data;
     });
   }
@@ -175,12 +175,12 @@ export class ComposeDialog implements OnInit {
     payload.communication_date = this.formatDate(this.commData.communication_date);
 
     if (this.isEditMode) {
-      this.http.put(`http://127.0.0.1:8000/communications/${payload.communication_id}`, payload).subscribe({
+      this.http.put(`https://vendoriq-platform.onrender.com/communications/${payload.communication_id}`, payload).subscribe({
         next: () => this.dialogRef.close(true),
         error: (err) => alert('Error updating communication')
       });
     } else {
-      this.http.post('http://127.0.0.1:8000/communications', payload).subscribe({
+      this.http.post('https://vendoriq-platform.onrender.com/communications', payload).subscribe({
         next: () => this.dialogRef.close(true),
         error: (err) => alert('Error saving communication')
       });
@@ -301,7 +301,7 @@ export class CommunicationsComponent implements OnInit {
   }
 
   fetchMessages(): void {
-    this.http.get<any[]>('http://127.0.0.1:8000/communications').subscribe({
+    this.http.get<any[]>('https://vendoriq-platform.onrender.com/communications').subscribe({
       next: (data) => this.dataSource.data = data
     });
   }
@@ -324,7 +324,7 @@ export class CommunicationsComponent implements OnInit {
 
   deleteMessage(id: number): void {
     if (confirm('Are you sure you want to delete this record?')) {
-      this.http.delete(`http://127.0.0.1:8000/communications/${id}`).subscribe({
+      this.http.delete(`https://vendoriq-platform.onrender.com/communications/${id}`).subscribe({
         next: () => this.fetchMessages(),
         error: (err) => alert('Error deleting record')
       });

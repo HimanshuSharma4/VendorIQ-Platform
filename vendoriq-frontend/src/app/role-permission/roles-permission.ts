@@ -54,7 +54,7 @@ export class RolesPermissionComponent implements OnInit {
   }
 
   fetchRoles(): void {
-    this.http.get<Role[]>('http://127.0.0.1:8000/roles', { headers: this.getHeaders() })
+    this.http.get<Role[]>('https://vendoriq-platform.onrender.com/roles', { headers: this.getHeaders() })
       .subscribe({
         next: (data) => {
           if (data && data.length > 0) {
@@ -75,7 +75,7 @@ export class RolesPermissionComponent implements OnInit {
   }
 
   fetchUserCounts(): void {
-    this.http.get<any[]>('http://127.0.0.1:8000/users', { headers: this.getHeaders() }).subscribe({
+    this.http.get<any[]>('https://vendoriq-platform.onrender.com/users', { headers: this.getHeaders() }).subscribe({
       next: (users) => {
         this.userCountsByRole = {};
         users.forEach(user => {
@@ -123,7 +123,7 @@ export class RolesPermissionComponent implements OnInit {
       ? [...new Set([...permissions, action])]
       : permissions.filter(item => item !== action);
 
-    this.http.put(`http://127.0.0.1:8000/roles/${this.selectedRole.id}`, this.selectedRole, { headers: this.getHeaders() })
+    this.http.put(`https://vendoriq-platform.onrender.com/roles/${this.selectedRole.id}`, this.selectedRole, { headers: this.getHeaders() })
       .subscribe({
         next: () => this.logActivity(`Changed permissions for role: ${this.selectedRole.name}`),
         error: (err) => console.error('Error updating permissions', err)
@@ -159,7 +159,7 @@ export class RolesPermissionComponent implements OnInit {
       status: logStatus
     };
 
-    this.http.post('http://127.0.0.1:8000/activity-logs', logData, { headers }).subscribe({
+    this.http.post('https://vendoriq-platform.onrender.com/activity-logs', logData, { headers }).subscribe({
       error: (err) => console.error('Activity log error:', err)
     });
   }
@@ -178,7 +178,7 @@ export class RolesPermissionComponent implements OnInit {
     if (isEdit) {
       const existingRole = this.roles.find(r => r.id === this.editingRoleId);
       rolePayload = { ...existingRole, ...rolePayload };
-      this.http.put(`http://127.0.0.1:8000/roles/${this.editingRoleId}`, rolePayload, { headers: this.getHeaders() })
+      this.http.put(`https://vendoriq-platform.onrender.com/roles/${this.editingRoleId}`, rolePayload, { headers: this.getHeaders() })
         .subscribe(() => { 
           this.fetchRoles(); 
           this.showRoleForm = false; 
@@ -188,7 +188,7 @@ export class RolesPermissionComponent implements OnInit {
       rolePayload = {
         ...rolePayload, users: 0, level: 'Custom', color: 'blue', permissions: {}
       };
-      this.http.post('http://127.0.0.1:8000/roles', rolePayload, { headers: this.getHeaders() })
+      this.http.post('https://vendoriq-platform.onrender.com/roles', rolePayload, { headers: this.getHeaders() })
         .subscribe(() => { 
           this.fetchRoles(); 
           this.showRoleForm = false; 
@@ -202,7 +202,7 @@ export class RolesPermissionComponent implements OnInit {
     if (role.id === 1) { alert('The Super Administrator role cannot be deleted.'); return; }
     if (!confirm(`Delete the role "${role.name}"?`)) return;
 
-    this.http.delete(`http://127.0.0.1:8000/roles/${role.id}`, { headers: this.getHeaders() })
+    this.http.delete(`https://vendoriq-platform.onrender.com/roles/${role.id}`, { headers: this.getHeaders() })
       .subscribe(() => {
         this.selectedRoleId = 1;
         this.fetchRoles();
