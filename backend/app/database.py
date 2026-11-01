@@ -11,7 +11,11 @@ load_dotenv()
 SQLALCHEMY_DATABASE_URL = os.getenv("DATABASE_URL")
 
 # Engine create karna (Ye PostgreSQL se main connection banata hai)
-engine = create_engine(SQLALCHEMY_DATABASE_URL)
+engine = create_engine(
+    SQLALCHEMY_DATABASE_URL,
+    pool_pre_ping=True,
+    connect_args={"sslmode": "require"}
+)
 
 # SessionLocal (Ye hamare database ke saath har naye request par baat karega)
 SessionLocal = sessionmaker(autocommit=False, autoflush=False, bind=engine)
